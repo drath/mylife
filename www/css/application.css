@@ -1,0 +1,15 @@
+/* Page Backgrounds */
+
+#main-page {
+  background: url("../img/thinker.png") no-repeat center bottom;
+  background-size: 100px;
+  background-color: #FFCC66;
+}
+
+/*html { 
+  background: url("../img/page_01.jpg") no-repeat center center fixed; 
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}*/
