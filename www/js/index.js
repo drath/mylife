@@ -72,6 +72,32 @@ var app = {
       }
     });
 
+    $('#cameraBtn').on('click', function(e){
+      e.preventDefault();
+      var options = {
+        quality: 75,
+        correctOrientation: true,
+        destinationType: navigator.camera.DestinationType.FILE_URI,
+        sourceType: navigator.camera.PictureSourceType.CAMERA
+      };
+
+      navigator.camera.getPicture(
+        function(imageUri){
+          window.resolveLocalFileSystemURI(img_uri, function(fileEntry) {
+            console.log("HERE YOU WILL GET THE NAME AND OTHER PROPERTIES");
+            console.log(fileEntry.name + " " + fileEntry.toURI());
+            //app.updateNote(title, fileEntry.toURI());
+          }, null); 
+        },
+        function(message){
+          console.log("cancelled");
+        },
+        options
+      );
+
+
+    });
+
   },
   displayAllEntries: function (tx, rs) {
     var rowOutput = "";
