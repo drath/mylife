@@ -135,8 +135,10 @@ var app = {
 
           case 'message':
             // this is the actual push notification. its format depends on the data model from the push server
-            // alert('message = '+e.message+' msgcnt = '+e.msgcnt);
-            console.log("Received a message from mylife server" + e.message);
+            console.log('message = '+e.message+' msgcnt = '+e.msgcnt);
+            console.log('message = '+ e.soundname);
+            $("#randomQuote").text(e.soundname);
+            // console.log("Received a message from mylife server" + e.quote);
           break;
 
           case 'error':
