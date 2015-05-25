@@ -48,14 +48,9 @@
             <div data-role="content">
               <p>Memories of the day</p>
               <div>
-                <textarea id="note" 
+                <textarea id="note"
                   placeholder="Write down your thoughts here...">
                 </textarea>
-                <div id="cameraBtn">
-                  <a href="#">
-                    <i class="fa fa-camera fa-2x"></i>
-                  </a>
-                </div>
               </div>
               <br/>
               <input id="btnAddNote" type="button" value="Add Note" />
@@ -65,7 +60,8 @@
               <strong><span id="entry-date"><span></strong>...
               <br/><br/>
               <blockquote>
-                <span id="randomEntry"></span>
+                <span id="randomEntry"></span><br/><br/>
+                <img id="randomEntryImgID" width="250px" src=""/>
               </blockquote>
               <br/><br/>
               <span id="randomQuote"></span>
@@ -79,6 +75,16 @@
               </div>
           </header>
           <div data-role="content">
+            <blockquote>
+              <span id="currentEntry"></span><br/><br/>     
+              <img id="currentEntryImgID" width="250px" src=""/>           
+            </blockquote>
+            <div id="cameraBtn">
+              <a href="#">
+                <i class="fa fa-camera fa-2x"></i>
+              </a>
+            </div>
+
             <p>Thank you</p>
             <a href="#main-page">Add one more?</a>
           </div>

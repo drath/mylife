@@ -15,15 +15,21 @@ var appDb = {
     appDb.db.transaction(function(tx) {
       tx.executeSql("CREATE TABLE IF NOT EXISTS " +
                     "entries(ID INTEGER PRIMARY KEY ASC, entry TEXT, added_on DATETIME)", []);
+      tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                    "attachments(ID INTEGER PRIMARY KEY ASC, entryId INTEGER, path TEXT, added_on DATETIME)", []);
     });
   },
-  addEntry: function (entryText) {
+  // Adds a new entry and calls the function to switch to next page
+  addEntry: function (entryText, switchEntryAddedPage) {
     appDb.db.transaction(function(tx){
       // The timeago jQuery plugin needs the data to be in ISO format.
       var addedOn = new Date().toISOString();
       tx.executeSql("INSERT INTO entries(entry, added_on) VALUES (?,?)",
           [entryText, addedOn],
-          appDb.onSuccess,
+          function(tx, results){
+            console.log("Inserted new entry with ID: " + results.insertId);
+            switchEntryAddedPage(results.insertId, entryText);
+          },
           appDb.onError);
      });
   },
@@ -47,6 +53,28 @@ var appDb = {
             var row = rs.rows.item(i); 
             renderFunc(row);
           }
+        }, 
+        appDb.onError);
+    });
+  },
+  addAttachment: function (path, entryId) {
+    console.log("adding attachment: " + path);
+    appDb.db.transaction(function(tx){
+      var addedOn = new Date().toISOString();
+      tx.executeSql("INSERT INTO attachments(entryId, path, added_on) VALUES (?,?,?)",
+          [entryId, path, addedOn],
+          appDb.onSuccess,
+          appDb.onError);
+    });
+  },
+  getAttachmentsByEntryId: function (renderFunc, entryId) {
+    // FIXME: Currently returning all attachments!
+    console.log("inside getAttachmentsByEntryId for ID: " + entryId);
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM attachments WHERE entryId=?", 
+        [entryId], 
+        function (tx, rs) {
+          renderFunc(rs.rows);
         }, 
         appDb.onError);
     });

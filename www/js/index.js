@@ -19,6 +19,7 @@
 var app = {
 
   regUrl: "",
+  last_inserted: null,
 
   // Application Constructor
   initialize: function() {
@@ -56,6 +57,7 @@ var app = {
     appDb.open();
     appDb.createTable();
 
+    $("#note").val("");
     // Read a random entry back from the entries table
     appDb.getRandomEntry(app.displayRandomEntry);
 
@@ -63,13 +65,18 @@ var app = {
     $('#btnAddNote').on('click', function(e){
       var entryText = $("#note").val();
       if (entryText.length > 0) {
-        appDb.addEntry(entryText);
-        $.mobile.changePage("#entry-added-page");
-        $("#note").val("");
+        appDb.addEntry(entryText, app.switchEntryAddedPage);
         appDb.getRandomEntry(app.displayRandomEntry);
       } else {
         alert("Nothing to say? Nothing to save.");
       }
+    });
+
+    $(document).on('pageshow', '#main-page', function(){
+      $("#note").val("");
+      $("#randomEntryImgID").attr("src", "");
+      // Read a random entry back from the entries table
+      appDb.getRandomEntry(app.displayRandomEntry);
     });
 
     $('#cameraBtn').on('click', function(e){
@@ -78,16 +85,19 @@ var app = {
         quality: 75,
         correctOrientation: true,
         destinationType: navigator.camera.DestinationType.FILE_URI,
+        encodingType: Camera.EncodingType.JPEG,
         sourceType: navigator.camera.PictureSourceType.CAMERA
       };
 
       navigator.camera.getPicture(
         function(imageUri){
-          window.resolveLocalFileSystemURI(img_uri, function(fileEntry) {
-            console.log("HERE YOU WILL GET THE NAME AND OTHER PROPERTIES");
-            console.log(fileEntry.name + " " + fileEntry.toURI());
-            //app.updateNote(title, fileEntry.toURI());
-          }, null); 
+          window.resolveLocalFileSystemURI(imageUri, 
+            function(fileEntry) {
+              console.log("Attaching image to: " + app.last_inserted);
+              appDb.addAttachment(fileEntry.toURI(), app.last_inserted);
+              $("#currentEntryImgID").attr("src", fileEntry.toURI());
+            }, 
+            null); 
         },
         function(message){
           console.log("cancelled");
@@ -98,6 +108,18 @@ var app = {
 
     });
 
+  },
+  switchEntryAddedPage: function (lastEntryId, entryText) {
+    console.log("Last entry ID: " + lastEntryId);
+    app.last_inserted = lastEntryId;
+    $("#note").val(""); //not needed
+    $("#randomEntryImgID").attr("src", ""); //not needed
+    $("#currentEntry").text(entryText);
+
+    console.log("Changing current Img to null");
+    $("#currentEntryImgID").attr("src", "");
+
+    $.mobile.changePage("#entry-added-page");
   },
   displayAllEntries: function (tx, rs) {
     var rowOutput = "";
@@ -119,8 +141,21 @@ var app = {
       $("#entry-date").text($.timeago(row.added_on));
       $("#randomEntry").text(row.entry);
       $("#label-past").text("Something you wrote");
+
+      console.log("Looking for attachments for entry ID: " + row.ID);
+      appDb.getAttachmentsByEntryId(app.displayAttachments, row.ID);
     } else {
       console.log("No memories found"); //should never happen
+    }
+  },
+  displayAttachments: function (attachmentRows) {
+    console.log("Inside displayAttachments, rows retd: " + attachmentRows.length);
+    for (var i = 0; i < attachmentRows.length; ++i) {
+      var attachmentRow = attachmentRows.item(i);
+      // For now, limiting to one display only. Should be easy to display more
+      // without changing the db schema.
+      $("#randomEntryImgID").attr("src", attachmentRow.path);
+      //console.log("PATHPATH: " + row.path);
     }
   },
   registerGCM: function (senderId) {
@@ -143,7 +178,7 @@ var app = {
           case 'registered':
               if ( e.regid.length > 0 )
               {
-                  console.log('Received registration id = '+e.regid);
+                  //console.log('Received registration id = '+e.regid);
                   $.ajax({
                       type: 'POST',
                       url: app.regUrl,

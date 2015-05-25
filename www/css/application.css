@@ -40,11 +40,6 @@ blockquote p {
   text-align: center;
 }
 
-#note {
-  float:left;
-  width: 85%;
-}
-
 #cameraBtn {
   text-align: right;
   padding-top: 15px;
