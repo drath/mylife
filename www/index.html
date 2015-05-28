@@ -41,7 +41,7 @@
             <header data-role ="header" data-theme="b"> 
               <h1 class="ui-title" role="heading">My Life</h1>
                 <div class="ui-btn-right" data-role="controlgroup" data-type="horizontal">
-                 <a href="#settings-page" data-role="button" data-icon="gear">See More</a>
+                 <a href="#see-more-page" data-role="button" data-icon="gear">See More</a>
                 </div>
             </header>
 
@@ -56,12 +56,12 @@
               <input id="btnAddNote" type="button" value="Add Note" />
 
               <br/>
-              <span id="label-past"></span>
-              <strong><span id="entry-date"><span></strong>...
+              <span class="label-past"></span>
+              <strong><span class="entry-date"><span></strong>...
               <br/><br/>
               <blockquote>
-                <span id="randomEntry"></span><br/><br/>
-                <img id="randomEntryImgID" width="250px" src=""/>
+                <span class="randomEntry"></span><br/><br/>
+                <img class="randomEntryImgID" width="250px" src=""/>
               </blockquote>
               <br/><br/>
               <span id="randomQuote"></span>
@@ -71,7 +71,7 @@
           <header data-role ="header" data-theme="b"> 
             <h1 class="ui-title" role="heading">My Life</h1>
               <div class="ui-btn-right" data-role="controlgroup" data-type="horizontal">
-               <a href="#settings-page" data-role="button" data-icon="gear">See More</a>
+               <a href="#see-more-page" data-role="button" data-icon="gear">See More</a>
               </div>
           </header>
           <div data-role="content">
@@ -87,6 +87,25 @@
 
             <p>Thank you</p>
             <a href="#main-page">Add one more?</a>
+          </div>
+        </div>
+        <!-- See more page -->
+        <div data-role="page" id="see-more-page">
+          <header data-role ="header" data-theme="b"> 
+            <h1 class="ui-title" role="heading">My Life</h1>
+              <div class="ui-btn-right" data-role="controlgroup" data-type="horizontal">
+               <a href="#main-page" data-role="button" data-icon="gear">Add a thought</a>
+              </div>
+          </header>
+          <div data-role="content">
+            <span class="label-past"></span>
+            <strong><span class="entry-date"><span></strong>...
+            <br/><br/>
+            <blockquote>
+              <span class="randomEntry"></span><br/><br/>
+              <img class="randomEntryImgID" width="250px" src=""/>
+            </blockquote>
+            <input id="btnSeeRandom" type="button" value="See Another" />
           </div>
         </div>
         <script type="text/javascript">

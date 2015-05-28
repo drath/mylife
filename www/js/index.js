@@ -61,7 +61,11 @@ var app = {
     // Read a random entry back from the entries table
     appDb.getRandomEntry(app.displayRandomEntry);
 
-    // Persist the entry to the entries table (in websql)
+    //
+    // Button handlers
+    //
+
+    // Add note button: Save the entry to the entries table (in websql)
     $('#btnAddNote').on('click', function(e){
       var entryText = $("#note").val();
       if (entryText.length > 0) {
@@ -72,12 +76,28 @@ var app = {
       }
     });
 
+    // See random button: Show a random entry
+    $('#btnSeeRandom').on('click', function(e){
+      appDb.getRandomEntry(app.displayRandomEntry);
+    });
+
+
+
+    //
+    // Page initialization functions
+    //
+
     $(document).on('pageshow', '#main-page', function(){
       $("#note").val("");
-      $("#randomEntryImgID").attr("src", "");
       // Read a random entry back from the entries table
       appDb.getRandomEntry(app.displayRandomEntry);
     });
+
+    $(document).on('pageshow', '#see-more-page', function(){
+      console.log("Showing see-more-page");
+      appDb.getRandomEntry(app.displayRandomEntry);
+    });
+
 
     $('#cameraBtn').on('click', function(e){
       e.preventDefault();
@@ -137,11 +157,20 @@ var app = {
   },
   displayRandomEntry: function (row) {
     if (row != null) {
-      console.log("Entry date: " + row.added_on);
-      $("#entry-date").text($.timeago(row.added_on));
-      $("#randomEntry").text(row.entry);
-      $("#label-past").text("Something you wrote");
 
+      console.log("Entry date: " + row.added_on);
+      
+      // To clear an img, it's not enough to set src to ""!
+      $(".randomEntryImgID").hide();
+      $(".entry-date").text("");
+      $(".randomEntry").text("");
+      
+      // Update the UI  
+      $(".entry-date").text($.timeago(row.added_on));
+      $(".randomEntry").text(row.entry);
+      $(".label-past").text("Something you wrote");
+
+      // Does the entry have any attachments? Display them!
       console.log("Looking for attachments for entry ID: " + row.ID);
       appDb.getAttachmentsByEntryId(app.displayAttachments, row.ID);
     } else {
@@ -149,14 +178,22 @@ var app = {
     }
   },
   displayAttachments: function (attachmentRows) {
+    // Clear out old one
     console.log("Inside displayAttachments, rows retd: " + attachmentRows.length);
-    for (var i = 0; i < attachmentRows.length; ++i) {
-      var attachmentRow = attachmentRows.item(i);
+
+    // For now, just display the first attachment
+    if (attachmentRows.length > 0) {
+      var attachmentRow = attachmentRows.item(0);
+      $(".randomEntryImgID").attr("src", attachmentRow.path);
+      $(".randomEntryImgID").show();
+    }
+    //for (var i = 0; i < attachmentRows.length; ++i) {
+      //var attachmentRow = attachmentRows.item(i);
       // For now, limiting to one display only. Should be easy to display more
       // without changing the db schema.
-      $("#randomEntryImgID").attr("src", attachmentRow.path);
+      //$(".randomEntryImgID").attr("src", attachmentRow.path);
       //console.log("PATHPATH: " + row.path);
-    }
+    //}
   },
   registerGCM: function (senderId) {
     var pushNotification = window.plugins.pushNotification;
