@@ -39,6 +39,9 @@ var app = {
     // Because they are annoying 
     $.mobile.defaultPageTransition = "none";
 
+    // Avoid the 300ms tap delay
+    FastClick.attach(document.body);
+
     // Read secret data from config file. The config file is not in github.
     jQuery.getJSON("config.json", function(data){ 
       console.log("Reading configuration file");        
