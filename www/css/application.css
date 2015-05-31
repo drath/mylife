@@ -15,33 +15,63 @@
 }
 
 blockquote {
-  background: #f9f9f9;
+  background: transparent;
   border-left: 10px solid #ccc;
   margin: 1.5em 10px;
   padding: 0.5em 10px;
   quotes: "\201C""\201D""\2018""\2019";
-  color: black;
+  color: white;
 }
 blockquote:before {
-  color: #ccc;
+  color: #fff;
   content: open-quote;
   font-size: 4em;
   line-height: 0.1em;
   margin-right: 0.25em;
   vertical-align: -0.4em;
-  color: black;
+  color: white;
 }
 blockquote p {
   display: inline;
-  color: black;
+  color: white;
 }
 
 .center {
   text-align: center;
 }
 
+button.ui-btn {
+  background-color: gray !important;
+  width: 100%;
+}
+
 #cameraBtn {
   text-align: right;
   padding-top: 15px;
   padding-left: 10px;
+}
+
+.panel {
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
+  background-color: rgba(255,255,255,0.1);
+}
+
+#note {
+  height: auto !important;
+}
+
+/* Overwriting the default, since this caused unncessary padding 
+ * of title text when textarea was in focus */
+.ui-header-fixed.ui-fixed-hidden {
+  padding: 0px;
+}
+
+.entry-date {
+  font-weight: bold;
+}
+
+#randomQuote {
+  text-align: center;
+  font-style: italic;
 }
