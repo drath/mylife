@@ -1,0 +1,27 @@
+{
+    "org.apache.cordova.file": {
+        "source": {
+            "type": "local",
+            "path": "plugins/org.apache.cordova.file"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "org.apache.cordova.camera": {
+        "source": {
+            "type": "registry",
+            "id": "org.apache.cordova.camera"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "com.phonegap.plugins.PushPlugin": {
+        "source": {
+            "type": "git",
+            "url": "https://github.com/phonegap-build/PushPlugin",
+            "subdir": "."
+        },
+        "is_top_level": true,
+        "variables": {}
+    }
+}
