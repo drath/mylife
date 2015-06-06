@@ -67,5 +67,5 @@
     <gap:splash gap:platform="ios" height="768" src="www/res/screen/ios/screen-ipad-landscape.png" width="1024" />
     <gap:splash gap:platform="winphone" src="www/res/screen/windows-phone/screen-portrait.jpg" />
     <access origin="*" />
-    <engine name="android" spec="^4.0.0" />
+    <engine name="android" spec="^4.0.2" />
 </widget>
