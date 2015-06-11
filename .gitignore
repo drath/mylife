@@ -1,3 +1,7 @@
-platforms/
-www/config.json
 .DS_Store
+platforms/
+plugins/
+res/
+www/config.json
+mylife.sublime-project
+mylife.sublime-workspace
