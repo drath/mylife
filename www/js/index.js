@@ -36,6 +36,8 @@ var app = {
   // Update DOM on a Received Event
   receivedEvent: function(id) {
 
+    console.log("jQuery version: " + jQuery.fn.jquery);
+
     // Because they are annoying 
     $.mobile.defaultPageTransition = "none";
 
@@ -60,9 +62,8 @@ var app = {
     appDb.open();
     appDb.createTable();
 
-    $("#note").val("");
-    // Read a random entry back from the entries table
-    appDb.getRandomEntry(app.displayRandomEntry);
+    // Initialize and display main page
+    app.showMainPage();
 
     //
     // Button handlers
@@ -91,9 +92,7 @@ var app = {
     //
 
     $(document).on('pageshow', '#main-page', function(){
-      $("#note").val("");
-      // Read a random entry back from the entries table
-      appDb.getRandomEntry(app.displayRandomEntry);
+      app.showMainPage();
     });
 
     $(document).on('pageshow', '#see-more-page', function(){
@@ -131,6 +130,19 @@ var app = {
 
     });
 
+  },
+  showMainPage: function () {
+    $("#note").val("");
+      
+    // Read a random entry back from the entries table
+    appDb.getRandomEntry(app.displayRandomEntry);
+
+    //Display the last received quote from the server
+    console.log("Window.localStorage: " + window.localStorage);
+    var quote = window.localStorage.getItem("quote");
+    if (quote != null) {
+      $("#randomQuote").text(quote);
+    }
   },
   switchEntryAddedPage: function (lastEntryId, entryText) {
     console.log("Last entry ID: " + lastEntryId);
@@ -218,17 +230,35 @@ var app = {
           case 'registered':
               if ( e.regid.length > 0 )
               {
-                  //console.log('Received registration id = '+e.regid);
+                  console.log('Received registration id = '+e.regid);
+                  console.log("Sending to: " + app.regUrl);
+
                   $.ajax({
                       type: 'POST',
                       url: app.regUrl,
                       data: e.regid,
+                      crossDomain: true,
+                      beforeSend: function () {console.log("senging...");},
                       success: function (data) {
                         console.log("Sent registration ID to mylife server!");
                       },
-                      error: function (xhr, status, error) {
-                        console.log('Error sending registration ID status: ' + 
-                                    status + " " + xhr.statusText + " " + error);
+                      error: function (xhr, textStatus, exception) {
+                        console.log("xhr status: " + xhr.status);
+                        if (xhr.status === 0) {
+                            console.log('Not connect. Verify Network.');
+                        } else if (xhr.status == 404) {
+                            console.log('Requested page not found. [404]');
+                        } else if (xhr.status == 500) {
+                            console.log('Internal Server Error [500].');
+                        } else if (exception === 'parsererror') {
+                            console.log('Requested JSON parse failed.');
+                        } else if (exception === 'timeout') {
+                            console.log('Time out error.');
+                        } else if (exception === 'abort') {
+                            console.log('Ajax request aborted.');
+                        } else {
+                            console.log('Uncaught Error.\n' + xhr.responseText);
+                        }
                       },
                   });
               }
@@ -239,6 +269,10 @@ var app = {
             console.log('message = '+e.message+' msgcnt = '+e.msgcnt);
             console.log('message = '+ e.soundname);
             $("#randomQuote").text(e.soundname);
+
+            // Till we get the next quote, let's save this on in localStorage
+            window.localStorage.setItem("quote", e.soundname);
+
             // console.log("Received a message from mylife server" + e.quote);
           break;
 
