@@ -86,7 +86,6 @@ var app = {
     });
 
 
-
     //
     // Page initialization functions
     //
@@ -99,37 +98,46 @@ var app = {
       console.log("Showing see-more-page");
       appDb.getRandomEntry(app.displayRandomEntry);
     });
-
+      
 
     $('#cameraBtn').on('click', function(e){
+      console.log("You clicked camera buttton");
       e.preventDefault();
-      var options = {
-        quality: 75,
-        correctOrientation: true,
-        destinationType: navigator.camera.DestinationType.FILE_URI,
-        encodingType: Camera.EncodingType.JPEG,
-        sourceType: navigator.camera.PictureSourceType.CAMERA
-      };
-
-      navigator.camera.getPicture(
-        function(imageUri){
-          window.resolveLocalFileSystemURI(imageUri, 
-            function(fileEntry) {
-              console.log("Attaching image to: " + app.last_inserted);
-              appDb.addAttachment(fileEntry.toURI(), app.last_inserted);
-              $("#currentEntryImgID").attr("src", fileEntry.toURI());
-            }, 
-            null); 
-        },
-        function(message){
-          console.log("cancelled");
-        },
-        options
-      );
-
-
+      app.attachPicture(navigator.camera.PictureSourceType.CAMERA);
     });
 
+    $('#galleryBtn').on('click', function(e){
+      console.log("You clicked gallery buttton");
+      e.preventDefault();
+      app.attachPicture(navigator.camera.PictureSourceType.PHOTOLIBRARY);
+    });
+
+  },
+  attachPicture: function (source) {
+    var options = {
+      quality: 75,
+      correctOrientation: true,
+      destinationType: navigator.camera.DestinationType.FILE_URI,
+      encodingType: Camera.EncodingType.JPEG,
+      sourceType: source
+    };
+
+    navigator.camera.getPicture(
+      function(imageUri){
+        window.resolveLocalFileSystemURI(imageUri, 
+          function(fileEntry) {
+            console.log("File Entry: " + fileEntry.toURI());
+            console.log("Attaching image to: " + app.last_inserted);
+            appDb.addAttachment(fileEntry.toURI(), app.last_inserted);
+            $("#currentEntryImgID").attr("src", fileEntry.toURI());
+          }, 
+          null); 
+      },
+      function(message){
+        console.log("cancelled");
+      },
+      options
+    );
   },
   showMainPage: function () {
     $("#note").val("");

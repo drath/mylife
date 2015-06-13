@@ -75,3 +75,8 @@ button.ui-btn {
   text-align: center;
   font-style: italic;
 }
+
+.entryActionBar {
+  text-align: right;
+  padding: 5px;
+}
