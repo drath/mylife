@@ -40,20 +40,20 @@ var appDb = {
   },
   getRandomEntry: function (renderFunc) {
     appDb.db.transaction(function(tx) {
-      tx.executeSql("SELECT * FROM entries ORDER BY ID", 
-        [], 
+      tx.executeSql("SELECT * FROM entries ORDER BY ID",
+        [],
         function (tx, rs) {
-          var len = rs.rows.length; 
+          var len = rs.rows.length;
 
           if (len > 0) {
             //generate random number
             var i = Math.floor(Math.random() * len);
 
             //get row
-            var row = rs.rows.item(i); 
+            var row = rs.rows.item(i);
             renderFunc(row);
           }
-        }, 
+        },
         appDb.onError);
     });
   },
@@ -61,7 +61,7 @@ var appDb = {
     console.log("adding attachment: " + path);
     appDb.db.transaction(function(tx){
       var addedOn = new Date().toISOString();
-      tx.executeSql("INSERT INTO attachments(entryId, path, added_on) VALUES (?,?,?)",
+      tx.executeSql("INSERT OR REPLACE INTO attachments(entryId, path, added_on) VALUES (?,?,?)",
           [entryId, path, addedOn],
           appDb.onSuccess,
           appDb.onError);
@@ -71,12 +71,12 @@ var appDb = {
     // FIXME: Currently returning all attachments!
     console.log("inside getAttachmentsByEntryId for ID: " + entryId);
     appDb.db.transaction(function(tx) {
-      tx.executeSql("SELECT * FROM attachments WHERE entryId=?", 
-        [entryId], 
+      tx.executeSql("SELECT * FROM attachments WHERE entryId=?",
+        [entryId],
         function (tx, rs) {
           renderFunc(rs.rows);
-        }, 
+        },
         appDb.onError);
     });
   }
-}
+};

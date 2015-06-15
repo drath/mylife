@@ -45,8 +45,9 @@ var app = {
     FastClick.attach(document.body);
 
     // Read secret data from config file. The config file is not in github.
-    jQuery.getJSON("config.json", function(data){ 
-      console.log("Reading configuration file");        
+    jQuery.getJSON("config.json", function(data){
+
+      console.log("Reading configuration file");
       app.regUrl = data.registration.url;
       console.log("Sender ID is: " + data.registration.senderId);
       console.log("Registration URL is: " + data.registration.url);
@@ -99,6 +100,9 @@ var app = {
       appDb.getRandomEntry(app.displayRandomEntry);
     });
       
+    //
+    // Button Handlers
+    //
 
     $('#cameraBtn').on('click', function(e){
       console.log("You clicked camera buttton");
@@ -124,17 +128,17 @@ var app = {
 
     navigator.camera.getPicture(
       function(imageUri){
-        window.resolveLocalFileSystemURI(imageUri, 
+        window.resolveLocalFileSystemURI(imageUri,
           function(fileEntry) {
-            console.log("File Entry: " + fileEntry.toURI());
-            console.log("Attaching image to: " + app.last_inserted);
-            appDb.addAttachment(fileEntry.toURI(), app.last_inserted);
-            $("#currentEntryImgID").attr("src", fileEntry.toURI());
-          }, 
-          null); 
+            var uri = fileEntry.toURI();
+            appDb.addAttachment(uri, app.last_inserted);
+            $("#currentEntryImgID").attr("src", uri);
+          },
+          null);
       },
       function(message){
-        console.log("cancelled");
+        console.log("cancelled: " + message);
+        alert(message + " Please make sure that selected file is an image");
       },
       options
     );
@@ -148,7 +152,7 @@ var app = {
     //Display the last received quote from the server
     console.log("Window.localStorage: " + window.localStorage);
     var quote = window.localStorage.getItem("quote");
-    if (quote != null) {
+    if (quote !== null) {
       $("#randomQuote").text(quote);
     }
   },
@@ -174,12 +178,12 @@ var app = {
     entries.innerHTML = rowOutput;
   },
   renderEntry: function (row) {
-    return "<li>" + row.entry + 
-     " [<a href='javascript:void(0);' onclick=\'html5rocks.webdb.deleteTodo(" + 
+    return "<li>" + row.entry +
+     " [<a href='javascript:void(0);' onclick=\'html5rocks.webdb.deleteTodo(" +
      row.ID +");\'>Delete</a>]</li>";
   },
   displayRandomEntry: function (row) {
-    if (row != null) {
+    if (row !== null) {
 
       console.log("Entry date: " + row.added_on);
       
@@ -222,11 +226,11 @@ var app = {
     var pushNotification = window.plugins.pushNotification;
     pushNotification.register(function () {
                                 console.log("Registration request sent");
-                              }, 
+                              },
                               function () {
                                 alert("registration failed!");
-                              }, 
-                              { 
+                              },
+                              {
                                 "senderID": senderId,
                                 "ecb":"app.onNotificationGCM"
                               });
