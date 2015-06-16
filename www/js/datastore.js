@@ -78,5 +78,46 @@ var appDb = {
         },
         appDb.onError);
     });
+  },
+  failFile: function (event) {
+    console.log("Error writing to backup file: " + event.target.error.code);
+  },
+  backupContent: function () {
+    appDb.db.transaction(function(tx){
+      tx.executeSql("SELECT * from entries", null, function(transaction, result) {
+        if (result.rows.length > 0) {
+          var memories = '{"entries":[';
+          for (var i = 0; i < result.rows.length; ++i) {
+            var row = result.rows.item(i);
+            var entry = row.entry.replace(/(\r\n|\n|\r)/gm,"");
+            console.log("Entry: " + entry + ", Length: " + entry.length);
+            entry = entry.trim();
+            memories = memories + '{"entry":"' + entry + '","added_on":"' + row.added_on + '"}';
+            if (i + 1 < result.rows.length) {
+              memories = memories + ',';
+            }
+          }
+
+          memories = memories + ']}';
+          console.log(memories);
+          var memoriesObj = JSON.parse(memories);
+          console.log(memoriesObj);
+          console.log("count is: " + memoriesObj.entries.length);
+
+          window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
+            // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
+            fileSystem.root.getFile("mylife_backup.txt", {create: true, exclusive: false}, function (fileEntry) {
+              fileEntry.createWriter(function (writer) {
+                writer.write(memories);
+                console.log("Backup file written!");
+              }, appDb.failFile);
+            }, appDb.failFile);
+          }, appDb.failFile);
+        } else {
+          alert("No content to backup");
+        }
+      },
+      appDb.onError);
+    });
   }
 };
