@@ -32,6 +32,7 @@ var appDb = {
           },
           appDb.onError);
      });
+
   },
   getAllEntries: function (renderFunc) {
     appDb.db.transaction(function(tx) {
@@ -51,7 +52,7 @@ var appDb = {
 
             //get row
             var row = rs.rows.item(i);
-            renderFunc(row);
+            renderFunc(row, len);
           }
         },
         appDb.onError);
@@ -78,6 +79,73 @@ var appDb = {
         },
         appDb.onError);
     });
+  },
+  import: function () {
+
+    fileTransfer.download(app.userName + ".sql", appDb.decrypt);
+
+  },
+  export: function () {
+    cordova.plugins.sqlitePorter.exportDbToSql(appDb.db, {
+        successFn: function (sql, count) {
+          console.log("Exported SQL: " + sql);
+          console.log("Exported SQL contains: " + count + "statements");
+          window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
+            // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
+            fileSystem.root.getFile(app.userName + ".sql", {create: true, exclusive: false}, function (fileEntry) {
+              fileEntry.createWriter(function (writer) {
+                try {
+                  console.log("URL to file: " + fileEntry.toURL());
+                  var cipherText = sjcl.encrypt("password", sql);
+                  writer.write(cipherText);
+                  console.log("Backup file written!");
+
+                  // Send the encrypted backup to the server
+                  fileTransfer.upload(fileEntry);
+
+                } catch (error) {
+                  console.log("Error encrypting backup: " + error.message);
+                }
+              }, appDb.failFile);
+            }, appDb.failFile);
+          }, appDb.failFile);
+        } // End successFn
+    });
+  },
+  decrypt: function () {
+    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
+      // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
+      fileSystem.root.getFile(app.userName + ".sql", {create: false, exclusive: false}, function (fileEntry) {
+        fileEntry.file(function (file) {
+          var reader = new FileReader();
+          reader.onloadend = function(evt) {
+            console.log("Read as text");
+            console.log(evt.target.result);
+            var cipherText = evt.target.result;
+
+            try {
+              var sql = sjcl.decrypt("password", cipherText);
+              console.log("Backup file read: " + sql);
+              cordova.plugins.sqlitePorter.importSqlToDb(appDb.db, sql, {
+                successFn: function (count) {
+                  console.log("Successfully imported " + count + " records");
+                  alert("Restored memories");
+                },
+                errorFn: function (error) {
+                  console.log("Error importing database: " + error);
+                },
+                progressFn: function (current, total) {
+                  console.log("Imported " + current + "/" + total + "statements");
+                }
+              });
+            } catch (error) {
+              console.log("Error decrypting backup: " + error.message);
+            }
+          };
+          reader.readAsText(file);
+        }, appDb.failFile);
+      }, appDb.failFile);
+    }, appDb.failFile);
   },
   failFile: function (event) {
     console.log("Error writing to backup file: " + event.target.error.code);

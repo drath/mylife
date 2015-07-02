@@ -19,6 +19,7 @@
 var app = {
 
   regUrl: "",
+  userName: "drath",
   last_inserted: null,
 
   // Application Constructor
@@ -86,6 +87,14 @@ var app = {
       appDb.getRandomEntry(app.displayRandomEntry);
     });
 
+    $('#btnBackup').on('click', function(e){
+      appDb.export();
+    });
+
+    $('#btnRestore').on('click', function(e){
+      appDb.import();
+    });
+
 
     //
     // Page initialization functions
@@ -104,11 +113,17 @@ var app = {
     // Button Handlers
     //
 
+    // Take a picture using camera, picture is stored in MyLife directory
+
     $('#cameraBtn').on('click', function(e){
       console.log("You clicked camera buttton");
       e.preventDefault();
       app.attachPicture(navigator.camera.PictureSourceType.CAMERA);
     });
+
+    // Attach a picture from the gallery. Warning: The picture is not copied
+    // to the MyLife directory, so if the picture is deleted from the gallery
+    // the memory entry will be corrupted. Maybe we should make a copy? (TBD)
 
     $('#galleryBtn').on('click', function(e){
       console.log("You clicked gallery buttton");
@@ -182,20 +197,23 @@ var app = {
      " [<a href='javascript:void(0);' onclick=\'html5rocks.webdb.deleteTodo(" +
      row.ID +");\'>Delete</a>]</li>";
   },
-  displayRandomEntry: function (row) {
+  displayRandomEntry: function (row, totalRows) {
     if (row !== null) {
 
       console.log("Entry date: " + row.added_on);
+      console.log("Total entries: " + totalRows);
       
       // To clear an img, it's not enough to set src to ""!
       $(".randomEntryImgID").hide();
       $(".entry-date").text("");
       $(".randomEntry").text("");
+      $(".totalEntries").text("");
       
       // Update the UI  
       $(".entry-date").text($.timeago(row.added_on));
       $(".randomEntry").text(row.entry);
       $(".label-past").text("Something you wrote");
+      $(".totalEntries").text(totalRows + " memories");
 
       // Does the entry have any attachments? Display them!
       console.log("Looking for attachments for entry ID: " + row.ID);

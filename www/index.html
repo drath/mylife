@@ -34,10 +34,12 @@
           <link rel="stylesheet" href="css/application.css" />
           <link rel="stylesheet" type="text/css" href="css-ext/font-awesome-4.3.0/css/font-awesome.min.css">
           <script type="text/javascript" charset="utf-8" src="cordova.js"></script> 
+          <script src="js-ext/sjcl.js"></script>
           <script src="js-ext/fastclick.js"></script>
           <script src="js-ext/jquery-2.1.4.min.js"></script>
           <script src="js-ext/jquery.mobile-1.4.4.min.js"></script>
           <script src="js-ext/jquery.timeago.js"></script>
+          <script src="js/filetransfer.js"></script>
           <script src="js/datastore.js"></script>
           <script type="text/javascript" src="PushNotification.js"></script>
           <script src="js/index.js"></script>
@@ -48,6 +50,7 @@
             <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
               <h1>My Life</h1>
               <a href="#see-more-page" data-ajax="false"><i class='fa fa-book'></i></a>
+              <a href="#settings-page" data-ajax="false"><i class='fa fa-cog'></i></a>
             </div>
 
             <div data-role="content">
@@ -106,7 +109,9 @@
         <div data-role="page" data-theme="b" id="entry-added-page">
           <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
             <h1>My Life</h1>
+            <span class="totalEntries"></span>
             <a href="#see-more-page" data-ajax="false"><i class='fa fa-book'></i></a>
+            <a href="#settings-page" data-ajax="false"><i class='fa fa-cog'></i></a>
           </div>
 
           <div data-role="content">
@@ -134,8 +139,10 @@
           <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
             <h1>My Life</h1>
             <a href="#main-page" data-ajax="false"><i class='fa fa-home'></i></a>
+            <a href="#settings-page" data-ajax="false"><i class='fa fa-cog'></i></a>
           </div>
           <div data-role="content">
+            <span class="totalEntries"></span>
             <button id="btnSeeRandom"
                     type="submit" 
                     data-inline="true" 
@@ -150,6 +157,29 @@
                 <img class="randomEntryImgID" width="250px" src=""/>
               </blockquote>
             </div>
+          </div>
+        </div>
+        <!--Settings Page -->
+        <div data-role="page" data-theme="b" id="settings-page">
+          <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
+            <h1>My Life</h1>
+            <span class="totalEntries"></span>
+            <a href="#main-page" data-ajax="false"><i class='fa fa-home'></i></a>
+            <a href="#see-more-page" data-ajax="false"><i class='fa fa-book'></i></a>
+          </div>
+          <div data-role="content">
+            <button id="btnBackup"
+                    type="submit" 
+                    data-inline="true" 
+                    class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
+                    <i class="lIcon fa fa-cloud-upload"></i>Backup
+            </button>
+            <button id="btnRestore"
+                    type="submit" 
+                    data-inline="true" 
+                    class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
+                    <i class="lIcon fa fa-cloud-download"></i>Restore
+            </button>
           </div>
         </div>
 
