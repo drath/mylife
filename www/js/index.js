@@ -19,7 +19,8 @@
 var app = {
 
   regUrl: "",
-  userName: "drath",
+  userName: "",
+  passphrase: "",
   last_inserted: null,
 
   // Application Constructor
@@ -45,7 +46,7 @@ var app = {
     // Avoid the 300ms tap delay
     FastClick.attach(document.body);
 
-    // Read secret data from config file. The config file is not in github.
+    // Read secret data from config file and register with GCM
     jQuery.getJSON("config.json", function(data){
 
       console.log("Reading configuration file");
@@ -60,19 +61,16 @@ var app = {
 
     });
 
-    // Create websql table if it does not exist
+    // Initialize database
     appDb.open();
     appDb.createTable();
-
-    // Initialize and display main page
-    app.showMainPage();
 
     //
     // Button handlers
     //
 
     // Add note button: Save the entry to the entries table (in websql)
-    $('#btnAddNote').on('click', function(e){
+    $('#btnAddNote').on("click", function(e){
       var entryText = $("#note").val();
       if (entryText.length > 0) {
         appDb.addEntry(entryText, app.switchEntryAddedPage);
@@ -82,17 +80,55 @@ var app = {
       }
     });
 
+    // Login button handler
+    $("#btnLogin").on("click", function () {
+      auth.init();
+      auth.googleAuth(app.authSuccess);
+    });
+
     // See random button: Show a random entry
     $('#btnSeeRandom').on('click', function(e){
       appDb.getRandomEntry(app.displayRandomEntry);
     });
 
+    // Backup entries to the cloud
     $('#btnBackup').on('click', function(e){
-      appDb.export();
+      var passphrase = $("#passphrase").val();
+      if (passphrase.length > 0) {
+        app.passphrase = passphrase;
+        $("#passphrase").val("");
+        appDb.export();
+      } else {
+        alert("Please enter the secret passphrase.");
+      }
     });
 
+    // Restore entries from the cloud
     $('#btnRestore').on('click', function(e){
-      appDb.import();
+      var passphrase = $("#passphrase").val();
+      if (passphrase.length > 0) {
+        app.passphrase = passphrase;
+        $("#passphrase").val("");
+        appDb.import();
+      } else {
+        alert("Please enter the secret passphrase.");
+      }
+    });
+
+    // Take a picture using camera, picture is stored in MyLife directory
+    $('#cameraBtn').on('click', function(e){
+      console.log("You clicked camera buttton");
+      e.preventDefault();
+      app.attachPicture(navigator.camera.PictureSourceType.CAMERA);
+    });
+
+    // Attach a picture from the gallery. Warning: The picture is not copied
+    // to the MyLife directory, so if the picture is deleted from the gallery
+    // the memory entry will be corrupted. Maybe we should make a copy? (TBD)
+    $('#galleryBtn').on('click', function(e){
+      console.log("You clicked gallery buttton");
+      e.preventDefault();
+      app.attachPicture(navigator.camera.PictureSourceType.PHOTOLIBRARY);
     });
 
 
@@ -108,29 +144,37 @@ var app = {
       console.log("Showing see-more-page");
       appDb.getRandomEntry(app.displayRandomEntry);
     });
+
+    //
+    // It's showtime!!!
+    //
+
+    var uid = window.localStorage.getItem("uid");
+    if (uid !== null && uid.length > 0) {
+      console.log("UID is: " + uid);
+      app.showMainPage();
+    } else {
+      console.log("UID not found");
+      app.showLoginPage();
+    }
+
+    //
+    // Testing!
+    //
+
+    //appDb.oneTimeFix();
+    appDb.testExportImport();
       
-    //
-    // Button Handlers
-    //
+  },
+  authSuccess: function (displayName, uid) {
+    console.log("Inside authSuccess: displayName is " + displayName);
+    console.log("Inside authSuccess: uid is " + uid);
 
-    // Take a picture using camera, picture is stored in MyLife directory
-
-    $('#cameraBtn').on('click', function(e){
-      console.log("You clicked camera buttton");
-      e.preventDefault();
-      app.attachPicture(navigator.camera.PictureSourceType.CAMERA);
-    });
-
-    // Attach a picture from the gallery. Warning: The picture is not copied
-    // to the MyLife directory, so if the picture is deleted from the gallery
-    // the memory entry will be corrupted. Maybe we should make a copy? (TBD)
-
-    $('#galleryBtn').on('click', function(e){
-      console.log("You clicked gallery buttton");
-      e.preventDefault();
-      app.attachPicture(navigator.camera.PictureSourceType.PHOTOLIBRARY);
-    });
-
+    app.userName = uid;
+    console.log("Saving UID to localStorage");
+    window.localStorage.setItem("uid", uid);
+    // Initialize and display main page
+    app.showMainPage();
   },
   attachPicture: function (source) {
     var options = {
@@ -158,6 +202,9 @@ var app = {
       options
     );
   },
+  showLoginPage: function () {
+    $.mobile.changePage("#login-page");
+  },
   showMainPage: function () {
     $("#note").val("");
       
@@ -170,6 +217,8 @@ var app = {
     if (quote !== null) {
       $("#randomQuote").text(quote);
     }
+
+    $.mobile.changePage("#main-page");
   },
   switchEntryAddedPage: function (lastEntryId, entryText) {
     console.log("Last entry ID: " + lastEntryId);

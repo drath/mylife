@@ -1,6 +1,5 @@
 .DS_Store
 platforms/
-plugins/
 res/
 www/config.json
 mylife.sublime-project

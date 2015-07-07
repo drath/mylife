@@ -39,8 +39,11 @@
           <script src="js-ext/jquery-2.1.4.min.js"></script>
           <script src="js-ext/jquery.mobile-1.4.4.min.js"></script>
           <script src="js-ext/jquery.timeago.js"></script>
+          <script src="js-ext/firebase.js"></script>
+          <script src="js/util.js"></script>
           <script src="js/filetransfer.js"></script>
           <script src="js/datastore.js"></script>
+          <script src="js/auth.js"></script>
           <script type="text/javascript" src="PushNotification.js"></script>
           <script src="js/index.js"></script>
     </head>
@@ -168,6 +171,11 @@
             <a href="#see-more-page" data-ajax="false"><i class='fa fa-book'></i></a>
           </div>
           <div data-role="content">
+            <input id="passphrase" 
+              type="text"
+              placeholder="Enter secret passphrase...">
+            </textarea>
+
             <button id="btnBackup"
                     type="submit" 
                     data-inline="true" 
@@ -182,7 +190,20 @@
             </button>
           </div>
         </div>
-
+        <!-- Login Page -->
+        <div data-role="page" data-theme="b" id="login-page">
+          <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
+            <h1>My Life</h1>
+          </div>
+          <div data-role="content">
+            <button id="btnLogin"
+                    type="submit" 
+                    data-inline="true" 
+                    class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
+                    <i class="lIcon fa fa-sign-in"></i>Login using Google Account
+            </button>
+          </div>
+        </div>
         <script src="js-ext/nativedroid.script.js"></script>
         </body>
         <script type="text/javascript">

@@ -18,25 +18,27 @@ var fileTransfer = {
       "http://176.58.121.237:8080/upload",
       function () {
         console.log("Upload succeeded!");
-        alert("Backup succeeded!");
+        fileEntry.remove();
+        //alert("Backup succeeded!");
       },
       function (error) {
         console.log("An error during upload has occurred: Code = " + error.code);
         console.log("upload error source " + error.source);
         console.log("upload error target " + error.target);
+        fileEntry.remove();
       },
       options, true);
 
     console.log("upload:end");
   },
 
-  download: function(relativePath, decryptFile) {
+  download: function(fileName, decryptFile) {
     console.log("Downloading backup...");
     window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
       var ft = new FileTransfer();
       ft.download(
         "http://176.58.121.237:8080/download",
-        fileSystem.root.toURL() + "/" + relativePath,
+        fileSystem.root.toURL() + "/" + fileName,
         function (entry) {
           console.log("Download completed: " + entry.toURL());
           decryptFile();
@@ -45,6 +47,12 @@ var fileTransfer = {
           console.log("Download error code: " + error.code);
           console.log("Download error source: " + error.source);
           console.log("Download error target: " + error.target);
+        },
+        false,
+        {
+          headers: {
+            "fileName": fileName
+          }
         }
       );
     });
