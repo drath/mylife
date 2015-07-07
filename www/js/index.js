@@ -159,10 +159,9 @@ var app = {
     }
 
     //
-    // Testing!
+    // Run tests
     //
 
-    //appDb.oneTimeFix();
     appDb.testExportImport();
       
   },

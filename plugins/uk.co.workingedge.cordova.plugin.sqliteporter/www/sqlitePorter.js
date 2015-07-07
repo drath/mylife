@@ -149,9 +149,11 @@
                                         var _values = [];
                                         for (var col in dataRow) {
                                             _fields.push(col);
+                                            // Patched: Drath
                                             var value = dataRow[col] + "";
                                             var sanitisedValue = value.replace(/\'\'?/g, "''");
                                             _values.push("'" + sanitisedValue + "'");
+                                            // End Patch
                                         }
                                         exportSQL += "INSERT OR REPLACE INTO " + tableName + "(" + _fields.join(",") + ") VALUES (" + _values.join(",") + ")" + separator;
                                         statementCount++;
