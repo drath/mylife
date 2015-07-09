@@ -19,17 +19,14 @@ var fileTransfer = {
       function () {
         console.log("Upload succeeded!");
         fileEntry.remove();
-        //alert("Backup succeeded!");
+        toastr.success("Backed up all memories to the cloud successfully.");
       },
       function (error) {
         console.log("An error during upload has occurred: Code = " + error.code);
-        console.log("upload error source " + error.source);
-        console.log("upload error target " + error.target);
+        toastr.error("Upload error: Code = " + error.code);
         fileEntry.remove();
       },
       options, true);
-
-    console.log("upload:end");
   },
 
   download: function(fileName, decryptFile) {
@@ -45,8 +42,7 @@ var fileTransfer = {
         },
         function (error) {
           console.log("Download error code: " + error.code);
-          console.log("Download error source: " + error.source);
-          console.log("Download error target: " + error.target);
+          toastr.error("Download error code: " + error.code);
         },
         false,
         {

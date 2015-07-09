@@ -14,7 +14,7 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
- * under the License.
+ * under the
  */
 var app = {
 
@@ -39,6 +39,25 @@ var app = {
   receivedEvent: function(id) {
 
     console.log("jQuery version: " + jQuery.fn.jquery);
+
+    // Toast options
+    toastr.options = {
+      "closeButton": false,
+      "debug": false,
+      "newestOnTop": false,
+      "progressBar": false,
+      "positionClass": "toast-bottom-center",
+      "preventDuplicates": false,
+      "onclick": null,
+      "showDuration": "300",
+      "hideDuration": "1000",
+      "timeOut": "5000",
+      "extendedTimeOut": "1000",
+      "showEasing": "swing",
+      "hideEasing": "linear",
+      "showMethod": "fadeIn",
+      "hideMethod": "fadeOut"
+    };
 
     // Because they are annoying 
     $.mobile.defaultPageTransition = "none";
@@ -97,9 +116,13 @@ var app = {
       if (passphrase.length > 0) {
         app.passphrase = passphrase;
         $("#passphrase").val("");
+
+        toastr.info("Backing up memories, please wait...", {
+          "timeOut": "3000"
+        });
         appDb.export();
       } else {
-        alert("Please enter the secret passphrase.");
+        toaster.error("Please enter the secret passphrase.");
       }
     });
 
@@ -109,15 +132,22 @@ var app = {
       if (passphrase.length > 0) {
         app.passphrase = passphrase;
         $("#passphrase").val("");
-        appDb.import();
+
+        toastr.info("Restoring memories, please wait...", {
+          "timeOut": "3000"
+        });
+
+        fileTransfer.download(app.userName + ".sql", function () {
+          appDb.import(app.onImportSuccess);
+        });
+
       } else {
-        alert("Please enter the secret passphrase.");
+        toaster.error("Please enter the secret passphrase.");
       }
     });
 
     // Take a picture using camera, picture is stored in MyLife directory
     $('#cameraBtn').on('click', function(e){
-      console.log("You clicked camera buttton");
       e.preventDefault();
       app.attachPicture(navigator.camera.PictureSourceType.CAMERA);
     });
@@ -126,7 +156,6 @@ var app = {
     // to the MyLife directory, so if the picture is deleted from the gallery
     // the memory entry will be corrupted. Maybe we should make a copy? (TBD)
     $('#galleryBtn').on('click', function(e){
-      console.log("You clicked gallery buttton");
       e.preventDefault();
       app.attachPicture(navigator.camera.PictureSourceType.PHOTOLIBRARY);
     });
@@ -152,6 +181,7 @@ var app = {
     var uid = window.localStorage.getItem("uid");
     if (uid !== null && uid.length > 0) {
       console.log("UID is: " + uid);
+      app.userName = uid;
       app.showMainPage();
     } else {
       console.log("UID not found");
@@ -162,8 +192,12 @@ var app = {
     // Run tests
     //
 
-    appDb.testExportImport();
+    // appDb.testExportImport();
       
+  },
+  onImportSuccess: function (count) {
+    console.log("Inside onImportSuccess... " + count);
+    toastr.success("Restored all memories from cloud backup.");
   },
   authSuccess: function (displayName, uid) {
     console.log("Inside authSuccess: displayName is " + displayName);

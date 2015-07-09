@@ -2,12 +2,13 @@
 
 var appDb = {
   db: null,
+  backupCount: null,
   open: function () {
     var dbSize = 5 * 1024 * 1024; // 5MB
     appDb.db = openDatabase("Entries", "1", "My Life Memories", dbSize);
   },
   onError: function (tx, e) {
-    alert("There has been an error: " + e.message);
+    toastr.error("Database error: " + e.message);
   },
   onSuccess: function () {
   },
@@ -19,26 +20,227 @@ var appDb = {
                     "attachments(ID INTEGER PRIMARY KEY ASC, entryId INTEGER, path TEXT, added_on DATETIME)", []);
     });
   },
-  // Adds a new entry and calls the function to switch to next page
-  addEntry: function (entryText, switchEntryAddedPage) {
+  // Adds a new entry, making sure to santize the entry for SQL inserting to db
+  addEntry: function (entryText, cbfn) {
     appDb.db.transaction(function(tx){
       // The timeago jQuery plugin needs the data to be in ISO format.
       var addedOn = new Date().toISOString();
       var santizedEntry = appDb.sanitiseForSql(entryText);
-      console.log("Adding santizedEntry: " + santizedEntry);
-      
       tx.executeSql("INSERT INTO entries(entry, added_on) VALUES (?,?)",
           [santizedEntry, addedOn],
           function(tx, results){
             console.log("Inserted new entry with ID: " + results.insertId);
-            if (switchEntryAddedPage !== undefined) {
-              switchEntryAddedPage(results.insertId, entryText);
+            if (cbfn !== undefined) {
+              cbfn(results.insertId, entryText);
             }
           },
           appDb.onError);
      });
 
   },
+  updateEntry: function (id, entry) {
+    console.log("Updating ID: " + id);
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("UPDATE entries SET entry = ? WHERE ID = ?",
+        [entry, id],
+        appDb.onSuccess,
+        appDb.onError);
+    });
+  },
+  deleteEntry: function (id) {
+    console.log("Deleting ID: " + id);
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("DELETE FROM entries WHERE ID = ?",
+        [id],
+        appDb.onSuccess,
+        appDb.onError);
+    });
+  },
+  deleteAllEntries: function(cbfn) {
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("DELETE FROM entries", [], cbfn, appDb.onError);
+    });
+  },
+  getAllEntries: function (cbfn) {
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("SELECT COUNT(*) AS count FROM entries", [], function (tx, rs) {
+        var count = rs.rows.item(0).count;
+        if (cbfn !== undefined) {
+          cbfn(count);
+        }
+      }, appDb.onError);
+    });
+  },
+  getRandomEntry: function (cbfn) {
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM entries ORDER BY ID",
+        [],
+        function (tx, rs) {
+          var len = rs.rows.length;
+
+          if (len > 0) {
+            //generate random number
+            var i = Math.floor(Math.random() * len);
+
+            //get row
+            var row = rs.rows.item(i);
+            cbfn(row, len);
+          }
+        },
+        appDb.onError);
+    });
+  },
+  addAttachment: function (path, entryId) {
+    console.log("adding attachment: " + path);
+    appDb.db.transaction(function(tx){
+      var addedOn = new Date().toISOString();
+      tx.executeSql("INSERT OR REPLACE INTO attachments(entryId, path, added_on) VALUES (?,?,?)",
+          [entryId, path, addedOn],
+          appDb.onSuccess,
+          appDb.onError);
+    });
+  },
+  getAttachmentsByEntryId: function (renderFunc, entryId) {
+    // FIXME: Currently returning all attachments!
+    console.log("inside getAttachmentsByEntryId for ID: " + entryId);
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM attachments WHERE entryId=?",
+        [entryId],
+        function (tx, rs) {
+          renderFunc(rs.rows);
+        },
+        appDb.onError);
+    });
+  },
+  // Export the database, encrypt the contents and upload to server
+  export: function () {
+    // The backup filename contains the userName, so we need userName.
+    if ( (app.userName === undefined) || (app.userName.length === 0) ) {
+      toastr.error("Unable to determine username. Please restart app and try again.");
+      return;
+    }
+    cordova.plugins.sqlitePorter.exportDbToSql(appDb.db, {
+        successFn: function (sql, count) {
+          window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
+            // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
+            fileSystem.root.getFile(app.userName + ".sql", {create: true, exclusive: false}, function (fileEntry) {
+              fileEntry.createWriter(function (writer) {
+                try {
+                  var cipherText = sjcl.encrypt(app.passphrase, sql);
+                  writer.write(cipherText);
+
+                  // Send the encrypted backup to the server
+                  fileTransfer.upload(fileEntry);
+
+                } catch (error) {
+                  console.log("Error encrypting backup: " + error.message);
+                  toastr.error("Error encrypting backup, backup failed: " + error.message);
+                }
+              }, appDb.failFile);
+            }, appDb.failFile);
+          }, appDb.failFile);
+        } // End successFn
+    });
+  },
+  // Will import an encrypted db. Db needs to exist on sdcard, at root location
+  // Will backup to json before modifying the DB as a precautionary measure
+  import: function (onImportSuccess) {
+
+    //
+    // This is data-destructive operation. Let's backup the db to 
+    // json, before we make changes to the db.
+    //
+
+    cordova.plugins.sqlitePorter.exportDbToJson(appDb.db, {
+        successFn: function (json, statementCount) {
+          window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
+            // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
+            fileSystem.root.getFile(app.userName + ".txt", {create: true, exclusive: false}, function (fileEntry) {
+              fileEntry.createWriter(function (writer) {
+                try {
+
+                  writer.write(json);
+
+                  // Now import without fear
+                  window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
+                    // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
+                    fileSystem.root.getFile(app.userName + ".sql", {create: false, exclusive: false}, function (fileEntry) {
+                      fileEntry.file(function (file) {
+                        var reader = new FileReader();
+                        reader.onloadend = function(evt) {
+                          console.log(evt.target.result);
+                          var cipherText = evt.target.result;
+
+                          try {
+                            var sql = sjcl.decrypt(app.passphrase, cipherText);
+                            cordova.plugins.sqlitePorter.importSqlToDb(appDb.db, sql, {
+                              successFn: function (count) {
+                                console.log("Successfully imported " + count + " records");
+                                if (onImportSuccess !== undefined) {
+                                  onImportSuccess(count);
+                                }
+                              },
+                              errorFn: function (error) {
+                                console.log("Error importing database: " + error.message);
+                                toastr.error("Error importing database: " + error.message);
+
+                                //
+                                // Bummer, importing the remote backup failed. Let's impot
+                                // the local json backup we created just before we started the 
+                                // remote operation
+                                //
+
+                                cordova.plugins.sqlitePorter.importJsonToDb(appDb.db, json, {
+                                  successFn: function (count) {
+                                    console.log("Successfully json-imported " + count + " records");
+                                  },
+                                  errorFn: function (error) {
+                                    console.log("Error importing database: " + error.message);
+                                    toastr.error("Error importing local backup database: " + error.message);
+                                    // Now we're really screwed. Ask user to email himself the .txt json 
+                                    // file from the root location.
+                                    return true;
+                                  },
+                                  progressFn: function (current, total) {
+                                    console.log("Imported json " + current + "/" + total + "statements");
+                                  }
+                                });
+
+                                // This should trigger a rollback?
+                                return true;
+                              },
+                              progressFn: function (current, total) {
+                                console.log("Imported " + current + "/" + total + "statements");
+                              }
+                            });
+                          } catch (error) {
+                            console.log("Error decrypting backup: " + error.message);
+                            toastr.warning("Invalid passphrase. Please try again.");
+                          }
+                        };
+                        reader.readAsText(file);
+                      }, appDb.failFile);
+                    }, appDb.failFile);
+                  }, appDb.failFile);
+                } catch (error) {
+                  console.log("Error encrypting backup: " + error.message);
+                  toastr.error("Error encrypting backup, backup failed: " + error.message);
+                }
+              }, appDb.failFile);
+            }, appDb.failFile);
+          }, appDb.failFile);
+        } // End successFn
+    });
+  },
+  failFile: function (event) {
+    console.log("Backup failed. " + event.target.error.code);
+    toast.error("Backup failed. " + event.target.error.code);
+  },
+  // Replace occurrences of 1 single quote with 2 single quotes to SQL-escape them.
+  sanitiseForSql: function (value) {
+    return (value+"").replace(/'([^']|$)/g,"''$1");
+  },
+  //TBD: Remove
   testExportImport: function () {
     var testEntries = ["I won't do it",
       "I should'nt do it",
@@ -74,7 +276,9 @@ var appDb = {
       // 15 secs wait, then import them from remote server
       setTimeout( function () {
         console.log("Starting Import Test...");
-        appDb.import();
+        fileTransfer.download(app.userName + ".sql", function () {
+          appDb.import(app.onImportSuccess);
+        });
       }, 15000);
 
       // 25 secs later, export the DB out again!
@@ -86,7 +290,11 @@ var appDb = {
       // 35 secs later, import the DB again!
       setTimeout( function () {
         console.log("Final Import Test...");
-        appDb.import();
+
+        fileTransfer.download(app.userName + ".sql", function () {
+          appDb.import(app.onImportSuccess);
+        });
+
       }, 35000);
 
       // 45 secs wait, then dump the DB contents and check
@@ -112,6 +320,7 @@ var appDb = {
     appDb.onError);
 
   },
+  // TBD: Remove
   oneTimeFix: function () {
     // won't, that's, i'd, 
     var badRows = [];
@@ -144,195 +353,6 @@ var appDb = {
           }
         },
         appDb.onError);
-    });
-
-  },
-  updateEntry: function (id, entry) {
-    console.log("Updating ID: " + id);
-    appDb.db.transaction(function(tx) {
-      tx.executeSql("UPDATE entries SET entry = ? WHERE ID = ?",
-        [entry, id],
-        function (tx, rs) {
-          console.log("FIXED ID:");
-        },
-        appDb.onError);
-    });
-  },
-  deleteEntry: function (id) {
-    console.log("DELETING ID: " + id);
-    appDb.db.transaction(function(tx) {
-      tx.executeSql("DELETE FROM entries WHERE ID = ?",
-        [id],
-        function (tx, rs) {
-          console.log("Deleted!");
-        },
-        appDb.onError);
-    });
-  },
-  deleteAllEntries: function(renderFunc) {
-    appDb.db.transaction(function(tx) {
-      tx.executeSql("DELETE FROM entries", [], renderFunc, appDb.onError);
-    });
-  },
-  getAllEntries: function (renderFunc) {
-    appDb.db.transaction(function(tx) {
-      tx.executeSql("SELECT * FROM entries", [], renderFunc, appDb.onError);
-    });
-  },
-  getRandomEntry: function (renderFunc) {
-    appDb.db.transaction(function(tx) {
-      tx.executeSql("SELECT * FROM entries ORDER BY ID",
-        [],
-        function (tx, rs) {
-          var len = rs.rows.length;
-
-          if (len > 0) {
-            //generate random number
-            var i = Math.floor(Math.random() * len);
-
-            //get row
-            var row = rs.rows.item(i);
-            renderFunc(row, len);
-          }
-        },
-        appDb.onError);
-    });
-  },
-  addAttachment: function (path, entryId) {
-    console.log("adding attachment: " + path);
-    appDb.db.transaction(function(tx){
-      var addedOn = new Date().toISOString();
-      tx.executeSql("INSERT OR REPLACE INTO attachments(entryId, path, added_on) VALUES (?,?,?)",
-          [entryId, path, addedOn],
-          appDb.onSuccess,
-          appDb.onError);
-    });
-  },
-  getAttachmentsByEntryId: function (renderFunc, entryId) {
-    // FIXME: Currently returning all attachments!
-    console.log("inside getAttachmentsByEntryId for ID: " + entryId);
-    appDb.db.transaction(function(tx) {
-      tx.executeSql("SELECT * FROM attachments WHERE entryId=?",
-        [entryId],
-        function (tx, rs) {
-          renderFunc(rs.rows);
-        },
-        appDb.onError);
-    });
-  },
-  import: function () {
-
-    fileTransfer.download(app.userName + ".sql", appDb.decrypt);
-
-  },
-  export: function () {
-    cordova.plugins.sqlitePorter.exportDbToSql(appDb.db, {
-        successFn: function (sql, count) {
-          console.log("Exported SQL: " + sql);
-          console.log("Exported SQL contains: " + count + "statements");
-          console.log("Creating file: " + app.userName + ".sql");
-          window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
-            // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
-            fileSystem.root.getFile(app.userName + ".sql", {create: true, exclusive: false}, function (fileEntry) {
-              fileEntry.createWriter(function (writer) {
-                try {
-                  console.log("URL to file: " + fileEntry.toURL());
-                  var cipherText = sjcl.encrypt(app.passphrase, sql);
-                  writer.write(cipherText);
-                  console.log("Backup file written!");
-
-                  // Send the encrypted backup to the server
-                  fileTransfer.upload(fileEntry);
-
-                } catch (error) {
-                  console.log("Error encrypting backup: " + error.message);
-                }
-              }, appDb.failFile);
-            }, appDb.failFile);
-          }, appDb.failFile);
-        } // End successFn
-    });
-  },
-  decrypt: function () {
-    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
-      // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
-      fileSystem.root.getFile(app.userName + ".sql", {create: false, exclusive: false}, function (fileEntry) {
-        fileEntry.file(function (file) {
-          var reader = new FileReader();
-          reader.onloadend = function(evt) {
-            console.log("Read as text");
-            console.log(evt.target.result);
-            var cipherText = evt.target.result;
-
-            try {
-              var sql = sjcl.decrypt(app.passphrase, cipherText);
-
-              console.log("Backup file read: " + sql);
-              cordova.plugins.sqlitePorter.importSqlToDb(appDb.db, sql, {
-                successFn: function (count) {
-                  console.log("Successfully imported " + count + " records");
-                  console.log("Restored memories");
-                },
-                errorFn: function (error) {
-                  console.log("Error importing database: " + error.message);
-                },
-                progressFn: function (current, total) {
-                  console.log("Imported " + current + "/" + total + "statements");
-                }
-              });
-            } catch (error) {
-              console.log("Error decrypting backup: " + error.message);
-              alert("Invalid passphrase. Please try again.");
-            }
-          };
-          reader.readAsText(file);
-        }, appDb.failFile);
-      }, appDb.failFile);
-    }, appDb.failFile);
-  },
-  failFile: function (event) {
-    console.log("Error writing to backup file: " + event.target.error.code);
-  },
-  // Replace occurrences of 1 single quote with 2 single quotes to SQL-escape them.
-  sanitiseForSql: function (value) {
-    return (value+"").replace(/'([^']|$)/g,"''$1");
-  },
-  backupContent: function () {
-    appDb.db.transaction(function(tx){
-      tx.executeSql("SELECT * from entries", null, function(transaction, result) {
-        if (result.rows.length > 0) {
-          var memories = '{"entries":[';
-          for (var i = 0; i < result.rows.length; ++i) {
-            var row = result.rows.item(i);
-            var entry = row.entry.replace(/(\r\n|\n|\r)/gm,"");
-            console.log("Entry: " + entry + ", Length: " + entry.length);
-            entry = entry.trim();
-            memories = memories + '{"entry":"' + entry + '","added_on":"' + row.added_on + '"}';
-            if (i + 1 < result.rows.length) {
-              memories = memories + ',';
-            }
-          }
-
-          memories = memories + ']}';
-          console.log(memories);
-          var memoriesObj = JSON.parse(memories);
-          console.log(memoriesObj);
-          console.log("count is: " + memoriesObj.entries.length);
-
-          window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
-            // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
-            fileSystem.root.getFile("mylife_backup.txt", {create: true, exclusive: false}, function (fileEntry) {
-              fileEntry.createWriter(function (writer) {
-                writer.write(memories);
-                console.log("Backup file written!");
-              }, appDb.failFile);
-            }, appDb.failFile);
-          }, appDb.failFile);
-        } else {
-          alert("No content to backup");
-        }
-      },
-      appDb.onError);
     });
   }
 };

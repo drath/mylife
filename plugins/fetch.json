@@ -24,14 +24,6 @@
         "is_top_level": true,
         "variables": {}
     },
-    "cordova-plugin-camera": {
-        "source": {
-            "type": "registry",
-            "id": "cordova-plugin-camera"
-        },
-        "is_top_level": true,
-        "variables": {}
-    },
     "uk.co.workingedge.cordova.plugin.sqliteporter": {
         "source": {
             "type": "registry",
@@ -68,6 +60,22 @@
         "source": {
             "type": "registry",
             "id": "cordova-plugin-device"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "cordova-plugin-media": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-media"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "cordova-plugin-camera": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-camera"
         },
         "is_top_level": true,
         "variables": {}
