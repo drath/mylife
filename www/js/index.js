@@ -111,40 +111,16 @@ var app = {
       appDb.getRandomEntry(app.displayRandomEntry);
     });
 
-    // Backup entries to the cloud
-    $('#btnBackup').on('click', function(e){
+    // Backup entries to the cloud (UT'ed)
+    $('#btnBackup').on('click', function () {
       var passphrase = $("#passphrase").val();
-      if (passphrase.length > 0) {
-        app.passphrase = passphrase;
-        $("#passphrase").val("");
-
-        toastr.info("Backing up memories, please wait...", {
-          "timeOut": "3000"
-        });
-        appDb.export();
-      } else {
-        toaster.error("Please enter the secret passphrase.");
-      }
+      app.backup(passphrase);
     });
 
     // Restore entries from the cloud
     $('#btnRestore').on('click', function(e){
       var passphrase = $("#passphrase").val();
-      if (passphrase.length > 0) {
-        app.passphrase = passphrase;
-        $("#passphrase").val("");
-
-        toastr.info("Restoring memories, please wait...", {
-          "timeOut": "3000"
-        });
-
-        fileTransfer.download(app.userName + ".sql", function () {
-          appDb.import(app.onImportSuccess);
-        });
-
-      } else {
-        toaster.error("Please enter the secret passphrase.");
-      }
+      app.restore(passphrase);
     });
 
     // Take a picture using camera, picture is stored in MyLife directory
@@ -200,7 +176,47 @@ var app = {
     //
 
     // appDb.testExportImport();
+    
+    console.log("*** Starting backup test...");
+    app.backup("secret");
+
+    // 5 secs wait, then export them to remote server
+    setTimeout( function () {
+      console.log("*** Starting restore test...");
+      app.restore("secret");
+    }, 30000);
+
+
       
+  },
+  backup: function (passphrase) {
+    if (passphrase.length > 0) {
+      app.passphrase = passphrase;
+      $("#passphrase").val("");
+
+      toastr.info("Backing up memories, please wait...", {
+        "timeOut": "3000"
+      });
+      appDb.export();
+    } else {
+      toastr.error("Please enter the secret passphrase.");
+    }
+  },
+  restore: function (passphrase) {
+    if (passphrase.length > 0) {
+      app.passphrase = passphrase;
+      $("#passphrase").val("");
+
+      toastr.info("Restoring memories, please wait...", {
+        "timeOut": "3000"
+      });
+
+      fileTransfer.download(app.userName + ".sql", function () {
+        appDb.import(app.onImportSuccess);
+      });
+    } else {
+      toastr.error("Please enter the secret passphrase.");
+    }
   },
   onImportSuccess: function (count) {
     toastr.success("Restored all memories from cloud backup.");
