@@ -18,7 +18,6 @@ var fileTransfer = {
       "http://176.58.121.237:8080/upload",
       function () {
         console.log("Upload succeeded!");
-        fileEntry.remove();
         toastr.success("Backed up all memories to the cloud successfully.");
       },
       function (error) {
@@ -29,7 +28,7 @@ var fileTransfer = {
       options, true);
   },
 
-  download: function(fileName, decryptFile) {
+  download: function(fileName, cbfn) {
     console.log("Downloading backup...");
     window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
       var ft = new FileTransfer();
@@ -38,7 +37,7 @@ var fileTransfer = {
         fileSystem.root.toURL() + "/" + fileName,
         function (entry) {
           console.log("Download completed: " + entry.toURL());
-          decryptFile();
+          cbfn(entry);
         },
         function (error) {
           console.log("Download error code: " + error.code);

@@ -21,6 +21,7 @@ var app = {
   regUrl: "",
   userName: "",
   passphrase: "",
+  rootDir: "mylife_pictures",
   last_inserted: null,
 
   // Application Constructor
@@ -175,6 +176,12 @@ var app = {
     });
 
     //
+    // Initial file wrapper object
+    //
+
+    appFile.init();
+
+    //
     // It's showtime!!!
     //
 
@@ -196,8 +203,21 @@ var app = {
       
   },
   onImportSuccess: function (count) {
-    console.log("Inside onImportSuccess... " + count);
     toastr.success("Restored all memories from cloud backup.");
+
+    //
+    // Now, lets import all the attachments
+    //
+
+    appDb.getAllAttachments(function (rows) {
+      for(var i = 0; i < rows.length; ++i) {
+        var fileName = util.getNameFromPath(rows.item(i).path);
+        fileTransfer.download(fileName, function (entry) {
+          appFile.moveFile(entry, app.rootDir);
+        });
+      }
+    });
+
   },
   authSuccess: function (displayName, uid) {
     console.log("Inside authSuccess: displayName is " + displayName);
@@ -220,20 +240,29 @@ var app = {
 
     navigator.camera.getPicture(
       function(imageUri){
-        window.resolveLocalFileSystemURI(imageUri,
-          function(fileEntry) {
-            var uri = fileEntry.toURI();
-            appDb.addAttachment(uri, app.last_inserted);
-            $("#currentEntryImgID").attr("src", uri);
+        window.resolveLocalFileSystemURL(imageUri,
+          function(origFileEntry) {
+
+            // Prefix the user-Id make it unique when uploaded to the server
+            appFile.renameFile(origFileEntry,
+              app.userName + "-" + origFileEntry.name,
+              function (renamedFileEntry) {
+
+              // And move it out of the cache directory so it won't get flushed by OS
+              appFile.moveFile(renamedFileEntry, app.rootDir, function (movedFileEntry) {
+                appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
+                $("#currentEntryImgID").attr("src", movedFileEntry.toURL());
+              });
+            });
           },
-          null);
+          null
+        );
       },
       function(message){
         console.log("cancelled: " + message);
-        alert(message + " Please make sure that selected file is an image");
+        toastr.warning(message + " Please make sure that selected file is an image");
       },
-      options
-    );
+      options);
   },
   showLoginPage: function () {
     $.mobile.changePage("#login-page");
@@ -321,6 +350,10 @@ var app = {
       //$(".randomEntryImgID").attr("src", attachmentRow.path);
       //console.log("PATHPATH: " + row.path);
     //}
+  },
+  fsFail: function (error) {
+    console.log("Inside fsFail, error code is: " + error.code);
+    util.printError("File operation failed", error);
   },
   registerGCM: function (senderId) {
     var pushNotification = window.plugins.pushNotification;

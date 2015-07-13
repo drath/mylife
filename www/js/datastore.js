@@ -71,6 +71,16 @@ var appDb = {
       }, appDb.onError);
     });
   },
+  getAllAttachments: function (cbfn) {
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM attachments",
+        [],
+        function (tx, rs) {
+          cbfn(rs.rows);
+        },
+        appDb.onError);
+    });
+  },
   getRandomEntry: function (cbfn) {
     appDb.db.transaction(function(tx) {
       tx.executeSql("SELECT * FROM entries ORDER BY ID",
@@ -100,14 +110,14 @@ var appDb = {
           appDb.onError);
     });
   },
-  getAttachmentsByEntryId: function (renderFunc, entryId) {
+  getAttachmentsByEntryId: function (cbfn, entryId) {
     // FIXME: Currently returning all attachments!
     console.log("inside getAttachmentsByEntryId for ID: " + entryId);
     appDb.db.transaction(function(tx) {
       tx.executeSql("SELECT * FROM attachments WHERE entryId=?",
         [entryId],
         function (tx, rs) {
-          renderFunc(rs.rows);
+          cbfn(rs.rows);
         },
         appDb.onError);
     });
@@ -119,6 +129,8 @@ var appDb = {
       toastr.error("Unable to determine username. Please restart app and try again.");
       return;
     }
+
+    // Export the memory entries
     cordova.plugins.sqlitePorter.exportDbToSql(appDb.db, {
         successFn: function (sql, count) {
           window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
@@ -141,6 +153,22 @@ var appDb = {
           }, appDb.failFile);
         } // End successFn
     });
+
+    // Export the pictures
+    appDb.getAllAttachments(function (rows) {
+      for (var i = 0; i < rows.length; ++i) {
+        console.log("filename: " + rows.item(i).path + " " + i);
+        window.resolveLocalFileSystemURL(rows.item(i).path,
+          appDb.uploadMe,
+          appDb.failFile
+        );
+      }
+    });
+
+  },
+  // Pulled out to avoid jslint Dont make function inside loop
+  uploadMe: function (fileEntry) {
+    fileTransfer.upload(fileEntry);
   },
   // Will import an encrypted db. Db needs to exist on sdcard, at root location
   // Will backup to json before modifying the DB as a precautionary measure
@@ -232,9 +260,9 @@ var appDb = {
         } // End successFn
     });
   },
-  failFile: function (event) {
-    console.log("Backup failed. " + event.target.error.code);
-    toast.error("Backup failed. " + event.target.error.code);
+  failFile: function (error) {
+    util.printError("Backup failed", error);
+    toastr.error("Backup failed. " + error.code);
   },
   // Replace occurrences of 1 single quote with 2 single quotes to SQL-escape them.
   sanitiseForSql: function (value) {
