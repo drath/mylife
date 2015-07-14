@@ -92,12 +92,7 @@ var app = {
     // Add note button: Save the entry to the entries table (in websql)
     $('#btnAddNote').on("click", function(e){
       var entryText = $("#note").val();
-      if (entryText.length > 0) {
-        appDb.addEntry(entryText, app.switchEntryAddedPage);
-        appDb.getRandomEntry(app.displayRandomEntry);
-      } else {
-        alert("Nothing to say? Nothing to save.");
-      }
+      app.addEntry(entryText);
     });
 
     // Login button handler
@@ -111,7 +106,7 @@ var app = {
       appDb.getRandomEntry(app.displayRandomEntry);
     });
 
-    // Backup entries to the cloud (UT'ed)
+    // Backup entries to the cloud
     $('#btnBackup').on('click', function () {
       var passphrase = $("#passphrase").val();
       app.backup(passphrase);
@@ -134,7 +129,7 @@ var app = {
     // the memory entry will be corrupted. Maybe we should make a copy? (TBD)
     $('#galleryBtn').on('click', function(e){
       e.preventDefault();
-      app.attachPicture(navigator.camera.PictureSourceType.PHOTOLIBRARY);
+      app.attachPicture(navigator.camera.PictureSourceType.SAVEDPHOTOALBUM);
     });
 
 
@@ -175,19 +170,16 @@ var app = {
     // Run tests
     //
 
-    // appDb.testExportImport();
-    
-    console.log("*** Starting backup test...");
-    app.backup("secret");
+    testRunner.run();
 
-    // 5 secs wait, then export them to remote server
-    setTimeout( function () {
-      console.log("*** Starting restore test...");
-      app.restore("secret");
-    }, 30000);
-
-
-      
+  },
+  addEntry: function (entryText) {
+    if (entryText.length > 0) {
+      appDb.addEntry(entryText, app.switchEntryAddedPage);
+      appDb.getRandomEntry(app.displayRandomEntry);
+    } else {
+      toastr.warning("Nothing to say? Nothing to save.");
+    }
   },
   backup: function (passphrase) {
     if (passphrase.length > 0) {
@@ -219,6 +211,9 @@ var app = {
     }
   },
   onImportSuccess: function (count) {
+    
+    // FIXME: This message is technically incorrect since we have
+    // not yet restored the attachments
     toastr.success("Restored all memories from cloud backup.");
 
     //
@@ -229,7 +224,9 @@ var app = {
       for(var i = 0; i < rows.length; ++i) {
         var fileName = util.getNameFromPath(rows.item(i).path);
         fileTransfer.download(fileName, function (entry) {
-          appFile.moveFile(entry, app.rootDir);
+          appFile.moveFile(entry, app.rootDir, function () {
+            console.log("Replaced attachment: " + entry.name);
+          });
         });
       }
     });
@@ -260,16 +257,24 @@ var app = {
           function(origFileEntry) {
 
             // Prefix the user-Id make it unique when uploaded to the server
-            appFile.renameFile(origFileEntry,
-              app.userName + "-" + origFileEntry.name,
-              function (renamedFileEntry) {
+            //console.log("origFileEntry-fullpath: " + origFileEntry.fullPath);
+            //console.log("imageUri: " + imageUri);
+            // appFile.renameFile(origFileEntry.fullPath,
+            //   app.userName + "-" + origFileEntry.name,
+            //   function (renamedFileEntry) {
 
-              // And move it out of the cache directory so it won't get flushed by OS
-              appFile.moveFile(renamedFileEntry, app.rootDir, function (movedFileEntry) {
+            //   // And move it out of the cache directory so it won't get flushed by OS
+            //   appFile.moveFile(renamedFileEntry, app.rootDir, function (movedFileEntry) {
+            //     appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
+            //     $("#currentEntryImgID").attr("src", movedFileEntry.toURL());
+            //   });
+            // });
+
+              var newName = app.userName + "-" + origFileEntry.name;
+              appFile.moveFile2(origFileEntry, app.rootDir, newName, function (movedFileEntry) {
                 appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
                 $("#currentEntryImgID").attr("src", movedFileEntry.toURL());
               });
-            });
           },
           null
         );
@@ -309,6 +314,7 @@ var app = {
     $("#currentEntryImgID").attr("src", "");
 
     $.mobile.changePage("#entry-added-page");
+    toastr.success("Entry added.");
   },
   displayAllEntries: function (tx, rs) {
     var rowOutput = "";

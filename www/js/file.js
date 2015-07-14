@@ -16,8 +16,20 @@ var appFile = {
       }, appFile.fail);
     }, appFile.fail);
   },
+  moveFile2: function (srcFileEntry, destDirName, newName, cbfn) {
+    appFile.fs.root.getDirectory(destDirName, {create: true}, function (destDirEntry) {
+      srcFileEntry.moveTo(destDirEntry, newName, function (fileEntry) {
+        console.log("File moved to: " + fileEntry.name);
+        if (cbfn !== undefined) {
+          cbfn(fileEntry);
+        }
+      }, appFile.fail);
+    }, appFile.fail);
+  },
   renameFile: function (srcFileEntry, newName, cbfn) {
+    console.log("Calling getParent of " + srcFileEntry.name);
     srcFileEntry.getParent(function (parentDirectory) {
+      console.log("Parent name: " + parentDirectory.name);
       srcFileEntry.moveTo(parentDirectory, newName, function (fileEntry) {
         console.log("File renamed to: " + fileEntry.fullPath);
         if (cbfn !== undefined) {
