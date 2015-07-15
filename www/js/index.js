@@ -170,7 +170,7 @@ var app = {
     // Run tests
     //
 
-    testRunner.run();
+    //testRunner.run();
 
   },
   addEntry: function (entryText) {
@@ -243,6 +243,7 @@ var app = {
     app.showMainPage();
   },
   attachPicture: function (source) {
+    console.log("Inside attachPicture: " + source);
     var options = {
       quality: 75,
       correctOrientation: true,
@@ -253,8 +254,11 @@ var app = {
 
     navigator.camera.getPicture(
       function(imageUri){
+        //console.log("image URI is: " + imageUri);
         window.resolveLocalFileSystemURL(imageUri,
           function(origFileEntry) {
+
+            console.log("origFileEntry:" + origFileEntry.name);
 
             // Prefix the user-Id make it unique when uploaded to the server
             //console.log("origFileEntry-fullpath: " + origFileEntry.fullPath);
@@ -270,11 +274,12 @@ var app = {
             //   });
             // });
 
-              var newName = app.userName + "-" + origFileEntry.name;
-              appFile.moveFile2(origFileEntry, app.rootDir, newName, function (movedFileEntry) {
-                appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
-                $("#currentEntryImgID").attr("src", movedFileEntry.toURL());
-              });
+            var newName = app.userName + "-" + origFileEntry.name;
+            //console.log("New name is: " + newName);
+            appFile.moveFile2(origFileEntry, app.rootDir, newName, function (movedFileEntry) {
+              appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
+              $("#currentEntryImgID").attr("src", movedFileEntry.toURL());
+            });
           },
           null
         );
