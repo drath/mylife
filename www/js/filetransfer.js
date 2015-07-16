@@ -1,5 +1,5 @@
 var fileTransfer = {
-  upload: function (fileEntry) {
+  upload: function (fileEntry, cbfn) {
     console.log("Trying to upload: " + fileEntry.toURL());
     var fileName = fileEntry.toURL().substr(fileEntry.toURL().lastIndexOf('/') + 1);
     console.log("Filename is: " + fileName);
@@ -18,7 +18,9 @@ var fileTransfer = {
       "http://176.58.121.237:8080/upload",
       function () {
         console.log("Upload succeeded!");
-        toastr.success("Backed up all memories to the cloud successfully.");
+        if (cbfn !== undefined) {
+          cbfn();
+        }
       },
       function (error) {
         console.log("An error during upload has occurred: Code = " + error.code);

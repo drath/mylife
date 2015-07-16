@@ -189,7 +189,9 @@ var app = {
       toastr.info("Backing up memories, please wait...", {
         "timeOut": "3000"
       });
-      appDb.export();
+      appDb.export(passphrase, app.userName, function (){
+        toastr.success("Backed up all memories to the cloud successfully.");
+      });
     } else {
       toastr.error("Please enter the secret passphrase.");
     }
@@ -204,7 +206,7 @@ var app = {
       });
 
       fileTransfer.download(app.userName + ".sql", function () {
-        appDb.import(app.onImportSuccess);
+        appDb.import(passphrase, app.userName, app.onImportSuccess);
       });
     } else {
       toastr.error("Please enter the secret passphrase.");

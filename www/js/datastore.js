@@ -28,7 +28,7 @@ var appDb = {
       var santizedEntry = appDb.sanitiseForSql(entryText);
       tx.executeSql("INSERT INTO entries(entry, added_on) VALUES (?,?)",
           [santizedEntry, addedOn],
-          function(tx, results){
+          function (tx, results){
             console.log("Inserted new entry with ID: " + results.insertId);
             if (cbfn !== undefined) {
               cbfn(results.insertId, entryText);
@@ -38,27 +38,42 @@ var appDb = {
      });
 
   },
-  updateEntry: function (id, entry) {
+  updateEntry: function (id, entry, cbfn) {
     console.log("Updating ID: " + id);
     appDb.db.transaction(function(tx) {
       tx.executeSql("UPDATE entries SET entry = ? WHERE ID = ?",
         [entry, id],
-        appDb.onSuccess,
+        function (tx, results) {
+          if (cbfn !== undefined) {
+            cbfn();
+          }
+        },
         appDb.onError);
     });
   },
-  deleteEntry: function (id) {
+  deleteEntry: function (id, cbfn) {
     console.log("Deleting ID: " + id);
     appDb.db.transaction(function(tx) {
       tx.executeSql("DELETE FROM entries WHERE ID = ?",
         [id],
-        appDb.onSuccess,
+        function (tx, results) {
+          if (cbfn !== undefined) {
+            cbfn();
+          }
+        },
         appDb.onError);
     });
   },
   deleteAllEntries: function(cbfn) {
     appDb.db.transaction(function(tx) {
-      tx.executeSql("DELETE FROM entries", [], cbfn, appDb.onError);
+      tx.executeSql("DELETE FROM entries",
+      [],
+      function (tx, results) {
+        if (cbfn !== undefined) {
+          cbfn();
+        }
+      },
+      appDb.onError);
     });
   },
   getAllEntries: function (cbfn) {
@@ -94,7 +109,10 @@ var appDb = {
 
             //get row
             var row = rs.rows.item(i);
-            cbfn(row, len);
+
+            if (cbfn !== undefined) {
+              cbfn(row, len);
+            }
           }
         },
         appDb.onError);
@@ -123,26 +141,32 @@ var appDb = {
     });
   },
   // Export the database, encrypt the contents and upload to server
-  export: function () {
+  export: function (passphrase, userName, cbfn) {
+    console.log("Inside export: " + passphrase);
+    console.log("username: " + userName);
+
     // The backup filename contains the userName, so we need userName.
-    if ( (app.userName === undefined) || (app.userName.length === 0) ) {
+    if ( (userName === undefined) || (userName.length === 0) ) {
       toastr.error("Unable to determine username. Please restart app and try again.");
       return;
     }
 
     // Export the memory entries
+    console.log("Exporting DB...");
     cordova.plugins.sqlitePorter.exportDbToSql(appDb.db, {
         successFn: function (sql, count) {
           window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
             // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
-            fileSystem.root.getFile(app.userName + ".sql", {create: true, exclusive: false}, function (fileEntry) {
+            fileSystem.root.getFile(userName + ".sql", {create: true, exclusive: false}, function (fileEntry) {
               fileEntry.createWriter(function (writer) {
                 try {
-                  var cipherText = sjcl.encrypt(app.passphrase, sql);
+                  console.log("Trying to encrypt");
+                  var cipherText = sjcl.encrypt(passphrase, sql);
                   writer.write(cipherText);
 
                   // Send the encrypted backup to the server
-                  fileTransfer.upload(fileEntry);
+                  console.log("Calling upload");
+                  fileTransfer.upload(fileEntry, cbfn);
 
                 } catch (error) {
                   console.log("Error encrypting backup: " + error.message);
@@ -151,7 +175,10 @@ var appDb = {
               }, appDb.failFile);
             }, appDb.failFile);
           }, appDb.failFile);
-        } // End successFn
+        },
+        errorFn: function () {
+          console.log("Error exporting database: " + error.message);
+        }
     });
 
     // Export the pictures
@@ -172,7 +199,7 @@ var appDb = {
   },
   // Will import an encrypted db. Db needs to exist on sdcard, at root location
   // Will backup to json before modifying the DB as a precautionary measure
-  import: function (onImportSuccess) {
+  import: function (passphrase, userName, onImportSuccess) {
 
     //
     // This is data-destructive operation. Let's backup the db to 
@@ -183,7 +210,7 @@ var appDb = {
         successFn: function (json, statementCount) {
           window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
             // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
-            fileSystem.root.getFile(app.userName + ".txt", {create: true, exclusive: false}, function (fileEntry) {
+            fileSystem.root.getFile(userName + ".txt", {create: true, exclusive: false}, function (fileEntry) {
               fileEntry.createWriter(function (writer) {
                 try {
 
@@ -192,7 +219,7 @@ var appDb = {
                   // Now import without fear
                   window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fileSystem) {
                     // fileSystem.root points to file:///sdcard if SDCARD exists, else file:///data/data/$PACKAGE_NAME
-                    fileSystem.root.getFile(app.userName + ".sql", {create: false, exclusive: false}, function (fileEntry) {
+                    fileSystem.root.getFile(userName + ".sql", {create: false, exclusive: false}, function (fileEntry) {
                       fileEntry.file(function (file) {
                         var reader = new FileReader();
                         reader.onloadend = function(evt) {
@@ -200,7 +227,7 @@ var appDb = {
                           var cipherText = evt.target.result;
 
                           try {
-                            var sql = sjcl.decrypt(app.passphrase, cipherText);
+                            var sql = sjcl.decrypt(passphrase, cipherText);
                             cordova.plugins.sqlitePorter.importSqlToDb(appDb.db, sql, {
                               successFn: function (count) {
                                 console.log("Successfully imported " + count + " records");
