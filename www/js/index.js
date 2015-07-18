@@ -170,7 +170,6 @@ var app = {
     // Run tests
     //
 
-    //testRunner.run();
 
   },
   addEntry: function (entryText) {
