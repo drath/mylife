@@ -25,20 +25,22 @@
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <!-- Enable all requests, inline styles and eval() -->
           <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'">
-          <link href='http://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+<!--           <link href='http://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'> -->
           <!-- nativeDroid core CSS -->
+          <!-- <link rel="stylesheet" type="text/css" href="css-ext/font-awesome-4.3.0/css/font-awesome.min.css"> -->
+          <link rel="stylesheet" href="css-ext/nativedroid/font-awesome.min.css" />
+          <link rel="stylesheet" href="css-ext/jquery.mobile-1.4.5.min.css" />
           <link rel="stylesheet" href="css-ext/nativedroid/jquerymobile.nativedroid.css" />
           <link rel="stylesheet" href="css-ext/nativedroid/jquerymobile.nativedroid.dark.css"  id='jQMnDTheme' />
+          <link rel="stylesheet" href="css-ext/nativedroid/jquerymobile.nativedroid.color.green.css" id='jQMnDColor' />
 
-          <link rel="stylesheet" href="css-ext/jquery.mobile-1.4.4.css" />
           <link rel="stylesheet" href="css/application.css" />
-          <link rel="stylesheet" type="text/css" href="css-ext/font-awesome-4.3.0/css/font-awesome.min.css">
           <link rel="stylesheet" type="text/css" href="css-ext/toastr.css">
           <script type="text/javascript" charset="utf-8" src="cordova.js"></script> 
           <script src="js-ext/sjcl.js"></script>
           <script src="js-ext/fastclick.js"></script>
           <script src="js-ext/jquery-2.1.4.min.js"></script>
-          <script src="js-ext/jquery.mobile-1.4.4.min.js"></script>
+          <script src="js-ext/jquery.mobile-1.4.5.min.js"></script>
           <script src="js-ext/jquery.timeago.js"></script>
           <script src="js-ext/firebase.js"></script>
           <script src="js-ext/toastr.js"></script>
@@ -52,32 +54,29 @@
     </head>
     <body>
         <!-- Main Page -->
-        <div data-role="page" data-theme='b' id="main-page">
+        <div data-role="page" data-theme='b' id="main-page" class="ui-page ui-page-theme-b">
             <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
               <h1>My Life</h1>
               <a href="#see-more-page" data-ajax="false"><i class='fa fa-book'></i></a>
               <a href="#settings-page" data-ajax="false"><i class='fa fa-cog'></i></a>
             </div>
 
-            <div data-role="content">
-              
+            <div data-role="content" class="ui-content" role="main">
+              <div class="inset">
+                <h2>How was your day?</h2>
+                <textarea id="note" 
+                  cols="40" 
+                  rows="8" 
+                  placeholder="Write down your thoughts here...">
+                </textarea>
+                <button id="btnAddNote"
+                        type="submit" 
+                        data-inline="true" 
+                        class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
+                        <i class="lIcon fa fa-check"></i>Submit
+                </button>
+              </div>
               <ul data-nativedroid-plugin='cards'>
-                <li data-cards-type='text'>
-                  <h3>How was your day?</h3>
-                  <textarea id="note" 
-                    cols="40" 
-                    rows="8" 
-                    placeholder="Write down your thoughts here...">
-                  </textarea>
-
-                  <button id="btnAddNote"
-                          type="submit" 
-                          data-inline="true" 
-                          class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
-                          <i class="lIcon fa fa-check"></i>Submit
-                  </button>
-                </li>
-                <hr/>
                 <li data-cards-type='text'>
                   <span class="label-past"></span>
                   <h1><span class="entry-date"><span>...</h1>
@@ -86,45 +85,23 @@
                     <img class="randomEntryImgID" width="250px" src=""/>
                   </blockquote>
                 </li>
-
               </ul>
-
-              <div id="randomQuote" style="">
-              </div>
-
-              <!-- Testing area -->
-              <!--Revert if the card animations are a drag -->
-<!--               <div class="inset panel">
-                <h3>How was your day?</h3>
-                <textarea id="note" 
-                  cols="40" 
-                  rows="8" 
-                  placeholder="Write down your thoughts here...">
-                </textarea>
-
-                <button id="btnAddNote"
-                        type="submit" 
-                        data-inline="true" 
-                        class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
-                        <i class="lIcon fa fa-check"></i>Submit
-                </button>
-              </div> -->
+              <h3 id="randomQuote" style=""></h3>
             </div>
-            <div data-role="footer"> 
+            <!-- <div data-role="footer"> 
               <a href="tests/index.html" data-ajax="false">Run Tests NOW</a>
-            </div>
+            </div> -->
         </div>
         <!-- Entry added page -->
         <div data-role="page" data-theme="b" id="entry-added-page">
           <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
             <h1>My Life</h1>
-            <span class="totalEntries"></span>
             <a href="#see-more-page" data-ajax="false"><i class='fa fa-book'></i></a>
             <a href="#settings-page" data-ajax="false"><i class='fa fa-cog'></i></a>
           </div>
 
           <div data-role="content">
-            <div class="inset panel">
+            <div class="inset">
               <blockquote>
                 <span id="currentEntry"></span><br/><br/>     
                 <img id="currentEntryImgID" width="250px" src=""/>           
@@ -137,10 +114,9 @@
                   <i class="fa fa-picture-o fa-2x"></i>
                 </a>
               </div>
+              <h2>Thank you. You now have <span class="totalEntries"></span></h2>
+              <a href="#main-page">Add one more?</a>
             </div>
-
-            <h1>Thank you</h1>
-            <a href="#main-page">Add one more?</a>
           </div>
         </div>
         <!-- See more page -->
@@ -150,15 +126,16 @@
             <a href="#main-page" data-ajax="false"><i class='fa fa-home'></i></a>
             <a href="#settings-page" data-ajax="false"><i class='fa fa-cog'></i></a>
           </div>
+
           <div data-role="content">
-            <span class="totalEntries"></span>
-            <button id="btnSeeRandom"
-                    type="submit" 
-                    data-inline="true" 
-                    class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
-                    <i class="lIcon fa fa-random"></i>See more
-            </button>
-            <div class="inset panel">
+            <div class="inset">
+              <h2>You have <span class="totalEntries"></span></h2>
+              <button id="btnSeeRandom"
+                      type="submit" 
+                      data-inline="true" 
+                      class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
+                      <i class="lIcon fa fa-random"></i>See more
+              </button>
               <span class="label-past"></span>
               <strong><span class="entry-date"><span></strong>...
               <blockquote>
@@ -172,28 +149,31 @@
         <div data-role="page" data-theme="b" id="settings-page">
           <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
             <h1>My Life</h1>
-            <span class="totalEntries"></span>
             <a href="#main-page" data-ajax="false"><i class='fa fa-home'></i></a>
             <a href="#see-more-page" data-ajax="false"><i class='fa fa-book'></i></a>
           </div>
           <div data-role="content">
-            <input id="passphrase" 
-              type="text"
-              placeholder="Enter secret passphrase...">
-            </textarea>
-
-            <button id="btnBackup"
-                    type="submit" 
-                    data-inline="true" 
-                    class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
-                    <i class="lIcon fa fa-cloud-upload"></i>Backup
-            </button>
-            <button id="btnRestore"
-                    type="submit" 
-                    data-inline="true" 
-                    class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
-                    <i class="lIcon fa fa-cloud-download"></i>Restore
-            </button>
+            <div class="inset">
+              <h2>Backup <span class="totalEntries"></span></h2>
+              <input id="passphrase" 
+                type="text"
+                placeholder="Enter secret passphrase...">
+              </input>
+              <button id="btnBackup"
+                      type="submit" 
+                      data-inline="true" 
+                      class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
+                      <i class="lIcon fa fa-cloud-upload"></i>Backup
+              </button>
+              <button id="btnRestore"
+                      type="submit" 
+                      data-inline="true" 
+                      class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
+                      <i class="lIcon fa fa-cloud-download"></i>Restore
+              </button> 
+              <h4>The passphrase is case sensitive. To restore memories you
+                must use the same passphrase you used to backup.</h4>
+            </div>
           </div>
         </div>
         <!-- Login Page -->
