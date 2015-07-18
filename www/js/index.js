@@ -303,7 +303,9 @@ var app = {
     //Display the last received quote from the server
     console.log("Window.localStorage: " + window.localStorage);
     var quote = window.localStorage.getItem("quote");
-    if (quote !== null) {
+
+    // Just in case the server sent us garbage data (undefined string)
+    if ( (quote !== null) && (quote !== "undefined") ) {
       $("#randomQuote").text(quote);
     }
 
