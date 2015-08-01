@@ -114,8 +114,14 @@ var app = {
 
     // Restore entries from the cloud
     $('#btnRestore').on('click', function(e){
-      var passphrase = $("#passphrase").val();
-      app.restore(passphrase);
+      navigator.notification.confirm(
+        "This will overwrite all memories on phone. Are you sure?",
+        function (buttonIndex) {
+          if (buttonIndex === 1) {
+            var passphrase = $("#passphrase").val();
+            app.restore(passphrase);
+          }
+        });
     });
 
     // Take a picture using camera, picture is stored in MyLife directory
