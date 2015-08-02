@@ -250,7 +250,7 @@ var app = {
     app.showMainPage();
   },
   attachPicture: function (source) {
-    console.log("Inside attachPicture: " + source);
+    console.log("Inside FUNC attach picture: " + source);
     var options = {
       quality: 75,
       correctOrientation: true,
@@ -261,7 +261,15 @@ var app = {
 
     navigator.camera.getPicture(
       function(imageUri){
-        //console.log("image URI is: " + imageUri);
+        console.log("XXXXXimage URI is: " + imageUri);
+
+        // Hack, because of PhoneGap bug https://issues.apache.org/jira/browse/CB-5398
+        if (imageUri.substring(0,21)=="content://com.android") {
+          console.log("Splitting image URI");
+          photo_split = imageUri.split("%3A");
+          imageUri = "content://media/external/images/media/"+photo_split[1];
+        }
+
         window.resolveLocalFileSystemURL(imageUri,
           function(origFileEntry) {
 
@@ -282,7 +290,7 @@ var app = {
             // });
 
             var newName = app.userName + "-" + origFileEntry.name;
-            //console.log("New name is: " + newName);
+            console.log("New name is: " + newName);
             appFile.moveFile2(origFileEntry, app.rootDir, newName, function (movedFileEntry) {
               appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
               $("#currentEntryImgID").attr("src", movedFileEntry.toURL());
