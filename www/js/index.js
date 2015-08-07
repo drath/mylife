@@ -422,34 +422,52 @@ var app = {
                   console.log('Received registration id = '+e.regid);
                   console.log("Sending to: " + app.regUrl);
 
-                  $.ajax({
-                      type: 'POST',
-                      url: app.regUrl,
-                      data: e.regid,
-                      crossDomain: true,
-                      beforeSend: function () {console.log("senging...");},
-                      success: function (data) {
-                        console.log("Sent registration ID to mylife server!");
-                      },
-                      error: function (xhr, textStatus, exception) {
-                        console.log("xhr status: " + xhr.status);
-                        if (xhr.status === 0) {
-                            console.log('Not connect. Verify Network.');
-                        } else if (xhr.status == 404) {
-                            console.log('Requested page not found. [404]');
-                        } else if (xhr.status == 500) {
-                            console.log('Internal Server Error [500].');
-                        } else if (exception === 'parsererror') {
-                            console.log('Requested JSON parse failed.');
-                        } else if (exception === 'timeout') {
-                            console.log('Time out error.');
-                        } else if (exception === 'abort') {
-                            console.log('Ajax request aborted.');
-                        } else {
-                            console.log('Uncaught Error.\n' + xhr.responseText);
-                        }
-                      },
-                  });
+                  // Get the timezone offset
+                  navigator.globalization.getDatePattern(
+                    function (date) {
+                      console.log("Timezone is: " + date.timezone);
+                      console.log("utc_offset in secs is: " + date.utc_offset);
+
+                      //Send offset and registration ID to server
+                      var dataObj = {
+                        regID: e.regid,
+                        utc_offset: date.utc_offset
+                      };
+
+                      $.ajax({
+                          type: 'POST',
+                          url: app.regUrl,
+                          //data: e.regid,
+                          data: dataObj,
+                          crossDomain: true,
+                          beforeSend: function () {console.log("senging...");},
+                          success: function (data) {
+                            console.log("Sent registration ID to mylife server!");
+                          },
+                          error: function (xhr, textStatus, exception) {
+                            console.log("xhr status: " + xhr.status);
+                            if (xhr.status === 0) {
+                                console.log('Not connect. Verify Network.');
+                            } else if (xhr.status == 404) {
+                                console.log('Requested page not found. [404]');
+                            } else if (xhr.status == 500) {
+                                console.log('Internal Server Error [500].');
+                            } else if (exception === 'parsererror') {
+                                console.log('Requested JSON parse failed.');
+                            } else if (exception === 'timeout') {
+                                console.log('Time out error.');
+                            } else if (exception === 'abort') {
+                                console.log('Ajax request aborted.');
+                            } else {
+                                console.log('Uncaught Error.\n' + xhr.responseText);
+                            }
+                          },
+                      });
+                    },
+                    function (error) {
+                      toastr.warning("Error getting getDatePattern: " + error.message);
+                    }
+                  );
               }
           break;
 
