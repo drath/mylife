@@ -253,6 +253,8 @@ var app = {
     console.log("Inside FUNC attach picture: " + source);
     var options = {
       quality: 75,
+      targetWidth: 800,
+      targetHeight: 800,
       correctOrientation: true,
       destinationType: navigator.camera.DestinationType.FILE_URI,
       encodingType: Camera.EncodingType.JPEG,
