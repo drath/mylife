@@ -140,7 +140,7 @@ var appDb = {
         appDb.onError);
     });
   },
-  // Export the database, encrypt the contents and upload to server
+  // Export the database and attachments, encrypt the contents and upload to server
   export: function (passphrase, userName, cbfn) {
     console.log("Inside export: " + passphrase);
     console.log("username: " + userName);

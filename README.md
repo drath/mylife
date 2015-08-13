@@ -14,6 +14,11 @@ But for now, enjoy (My) Life.
 
 # Technical details
 
+## Network activity
+- On startup, the app sends the registration ID and timezone info to the MyLife server using AJAX POST.
+- During backup and restore. The filetransfer.js upload/download functions are used to communicate with the server.
+
+
 This is a pretty simple (at least for now!) hybrid app using Phonegap technology. It also uses Google Cloud 
 Notifications alongwith a mylife nodejs-based server application for daily reminders. (TBD: Post link to mylife 
 server.) Registration IDs that are sent to the app from GCN are sent to the mylife server programmatically, using

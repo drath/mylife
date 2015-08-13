@@ -25,7 +25,6 @@ var fileTransfer = {
       function (error) {
         console.log("An error during upload has occurred: Code = " + error.code);
         toastr.error("Upload error: Code = " + error.code);
-        fileEntry.remove();
       },
       options, true);
   },
