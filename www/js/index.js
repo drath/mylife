@@ -124,6 +124,16 @@ var app = {
         });
     });
 
+    //Mark a memory as important
+    $('#starBtn').on('click', function(e){
+      if (this.className.indexOf("fa-star-o") > -1) {
+        appDb.addMemorable(app.last_inserted);
+      } else {
+        appDb.removeMemorable(app.last_inserted);
+      }
+      $(this).toggleClass("fa-star-o");
+    });
+
     // Take a picture using camera, picture is stored in MyLife directory
     $('#cameraBtn').on('click', function(e){
       e.preventDefault();
@@ -365,6 +375,8 @@ var app = {
       $(".entry-date").text("");
       $(".randomEntry").text("");
       $(".totalEntries").text("");
+
+      $("#starBtnRdOnly").addClass("fa-star-o fa-star");
       
       // Update the UI  
       $(".entry-date").text($.timeago(row.added_on));
@@ -375,8 +387,18 @@ var app = {
       // Does the entry have any attachments? Display them!
       console.log("Looking for attachments for entry ID: " + row.ID);
       appDb.getAttachmentsByEntryId(app.displayAttachments, row.ID);
+
+      // Is this a memorable entry?
+      console.log("Checking if this entry is memorable...");
+      appDb.isEntryMemorable(app.displayMemorable, row.ID);
     } else {
       console.log("No memories found"); //should never happen
+    }
+  },
+  displayMemorable: function (isMemorable) {
+    console.log("isMemorable is: " + isMemorable);
+    if (isMemorable === true) {
+      $("#starBtnRdOnly").toggleClass("fa-star-o");
     }
   },
   displayAttachments: function (attachmentRows) {

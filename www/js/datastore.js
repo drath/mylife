@@ -18,6 +18,8 @@ var appDb = {
                     "entries(ID INTEGER PRIMARY KEY ASC, entry TEXT, added_on DATETIME)", []);
       tx.executeSql("CREATE TABLE IF NOT EXISTS " +
                     "attachments(ID INTEGER PRIMARY KEY ASC, entryId INTEGER, path TEXT, added_on DATETIME)", []);
+      tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                    "memorables(ID INTEGER PRIMARY KEY ASC, entryId INTEGER)", []);
     });
   },
   // Adds a new entry, making sure to santize the entry for SQL inserting to db
@@ -114,6 +116,37 @@ var appDb = {
               cbfn(row, len);
             }
           }
+        },
+        appDb.onError);
+    });
+  },
+  addMemorable: function (entryId) {
+    console.log("Adding entry id: " + entryId + " as memorable...");
+    appDb.db.transaction(function(tx){
+      tx.executeSql("INSERT OR REPLACE INTO memorables(entryId) VALUES (?)",
+          [entryId],
+          function () {
+            toastr.success("Flagged as memorable!");
+          },
+          appDb.onError);
+    });
+  },
+  removeMemorable: function (entryId) {
+    console.log("Removing entry id: " + entryId + " as memorable...");
+    appDb.db.transaction(function(tx){
+      tx.executeSql("DELETE FROM memorables WHERE entryId = ?",
+          [entryId],
+          appDb.onSuccess,
+          appDb.onError);
+    });
+  },
+  isEntryMemorable: function (cbfn, entryId) {
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM memorables WHERE entryId=?",
+        [entryId],
+        function (tx, rs) {
+          var isMemorable = rs.rows.length > 0 ? true : false;
+          cbfn(isMemorable);
         },
         appDb.onError);
     });
