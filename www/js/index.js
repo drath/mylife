@@ -101,6 +101,21 @@ var app = {
       auth.googleAuth(app.authSuccess);
     });
 
+    // Edit current memory (the most recently added one)
+    $("#editCurrentMemoryBtn").on("click", function (e){
+      //$("#currentEntry").textinput("enable");
+      $("#currentEntry").focus();
+    });
+
+    $("#currentEntry").on("focusout", function (e){
+      var text = $("#currentEntry").val();
+      if (text.length > 0) {
+        appDb.updateEntry(app.last_inserted, text, function () {
+          toastr.success("Memory updated");
+        });
+      }
+    });
+
     // See random button: Show a random entry
     $('#btnSeeRandom').on('click', function(e){
       appDb.getRandomEntry(app.displayRandomEntry);
@@ -191,7 +206,7 @@ var app = {
   addEntry: function (entryText) {
     if (entryText.length > 0) {
       appDb.addEntry(entryText, app.switchEntryAddedPage);
-      appDb.getRandomEntry(app.displayRandomEntry);
+      //appDb.getRandomEntry(app.displayRandomEntry);
     } else {
       toastr.warning("Nothing to say? Nothing to save.");
     }
@@ -273,7 +288,7 @@ var app = {
 
     navigator.camera.getPicture(
       function(imageUri){
-        console.log("XXXXXimage URI is: " + imageUri);
+        console.log("Image URI is: " + imageUri);
 
         // Hack, because of PhoneGap bug https://issues.apache.org/jira/browse/CB-5398
         if (imageUri.substring(0,21)=="content://com.android") {
@@ -342,7 +357,9 @@ var app = {
     app.last_inserted = lastEntryId;
     $("#note").val(""); //not needed
     $("#randomEntryImgID").attr("src", ""); //not needed
-    $("#currentEntry").text(entryText);
+
+    console.log("Setting the new text to: " + entryText);
+    $("#currentEntry").val(entryText);
 
     console.log("Changing current Img to null");
     $("#currentEntryImgID").attr("src", "");
@@ -405,9 +422,11 @@ var app = {
     // Clear out old one
     console.log("Inside displayAttachments, rows retd: " + attachmentRows.length);
 
-    // For now, just display the first attachment
+    // For now, just display the last added attachment
     if (attachmentRows.length > 0) {
-      var attachmentRow = attachmentRows.item(0);
+      console.log("Number of attachments: " + attachmentRows.length);
+      var lastAttachmentIndex = attachmentRows.length - 1;
+      var attachmentRow = attachmentRows.item(lastAttachmentIndex);
       $(".randomEntryImgID").attr("src", attachmentRow.path);
       $(".randomEntryImgID").show();
     }

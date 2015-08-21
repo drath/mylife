@@ -88,7 +88,7 @@
               </ul>
               <h3 id="randomQuote" style=""></h3>
             </div>
-            <!-- <div data-role="footer"> 
+            <!-- <div data-role="footer">
               <a href="tests/index.html" data-ajax="false">Run Tests NOW</a>
             </div> -->
         </div>
@@ -103,12 +103,18 @@
           <div data-role="content">
             <div class="inset">
               <blockquote>
-                <span id="currentEntry"></span><br/><br/>     
+                <textarea id="currentEntry" 
+                  cols="40" 
+                  rows="8">
+                </textarea>  
                 <img id="currentEntryImgID" width="250px" src=""/>           
               </blockquote>
               <div class="entryActionBar">
                 <a href="#">
                     <i id="starBtn" class="fa fa-star-o fa-star fa-2x"></i>
+                </a>
+                <a id="editCurrentMemoryBtn" href="#">
+                  <i class="fa fa-pencil fa-2x"></i>
                 </a>
                 <a id="cameraBtn" href="#">
                   <i class="fa fa-camera fa-2x"></i>
@@ -199,7 +205,6 @@
           </div>
         </div>
         <script src="js-ext/nativedroid.script.js"></script>
-        </body>
         <script type="text/javascript">
             app.initialize();
         </script>
