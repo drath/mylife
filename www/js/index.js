@@ -97,7 +97,11 @@ var app = {
 
     // Login button handler
     $("#btnLogin").on("click", function () {
+      console.log("Inside login click handler function");
+      console.log("Auth is: " + auth);
       auth.init();
+
+      console.log("Calling authentication subroutine");
       auth.googleAuth(app.authSuccess);
     });
 
@@ -187,13 +191,16 @@ var app = {
     // It's showtime!!!
     //
 
+    console.log("Show time now!");
     var uid = window.localStorage.getItem("uid");
     if (uid !== null && uid.length > 0) {
-      console.log("UID is: " + uid);
+      console.log("Found UID is: " + uid);
       app.userName = uid;
+
+      console.log("Will display main page now");
       app.showMainPage();
     } else {
-      console.log("UID not found");
+      console.log("UID not found, will display login page!!");
       app.showLoginPage();
     }
 
@@ -272,6 +279,8 @@ var app = {
     console.log("Saving UID to localStorage");
     window.localStorage.setItem("uid", uid);
     // Initialize and display main page
+
+    console.log("Will display main page now!");
     app.showMainPage();
   },
   attachPicture: function (source) {
@@ -339,10 +348,11 @@ var app = {
     $("#note").val("");
       
     // Read a random entry back from the entries table
+    console.log("Getting random entry");
     appDb.getRandomEntry(app.displayRandomEntry);
 
     //Display the last received quote from the server
-    console.log("Window.localStorage: " + window.localStorage);
+    console.log("Checking Window.localStorage for quotes: " + window.localStorage);
     var quote = window.localStorage.getItem("quote");
 
     // Just in case the server sent us garbage data (undefined string)
@@ -350,6 +360,7 @@ var app = {
       $("#randomQuote").text(quote);
     }
 
+    console.log("Switching to main page NOW!");
     $.mobile.changePage("#main-page");
   },
   switchEntryAddedPage: function (lastEntryId, entryText) {
