@@ -304,6 +304,8 @@ var app = {
     app.showMainPage();
   },
   attachPicture: function (source) {
+    var photo_split = "";
+
     console.log("Inside FUNC attach picture: " + source);
     var options = {
       quality: 75,
@@ -345,7 +347,8 @@ var app = {
             //   });
             // });
 
-            var newName = app.userName + "-" + origFileEntry.name;
+            // origFileEntry is always modified.jpg, if source is gallery. Let's randomize it.
+            var newName = app.userName + "-" + Date.now() + "-" + origFileEntry.name;
             console.log("New name is: " + newName);
             appFile.moveFile2(origFileEntry, app.rootDir, newName, function (movedFileEntry) {
               appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
