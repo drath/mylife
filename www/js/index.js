@@ -398,6 +398,10 @@ var app = {
     console.log("Changing current Img to null");
     $("#currentEntryImgID").attr("src", "");
 
+    //Reset the star state to not-memorable
+    console.log("Resetting the star...");
+    $("#starBtn").removeClass("fa-star").addClass("fa-star-o fa-star");
+
     console.log("Calculating number of entries...");
     appDb.getAllEntries(function (count) {
       console.log("There are now " + count + "memories");
