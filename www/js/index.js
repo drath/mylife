@@ -23,6 +23,7 @@ var app = {
   passphrase: "",
   rootDir: "mylife_pictures",
   last_inserted: null,
+  last_read: null,
 
   // Application Constructor
   initialize: function() {
@@ -125,6 +126,18 @@ var app = {
       appDb.getRandomEntry(app.displayRandomEntry);
     });
 
+    // See newer than what is currently displayed
+    $("#btnSeeNewer").on("click", function(e) {
+      console.log("Currently reading entry id: " + app.last_read);
+      appDb.getNext(app.last_read, app.displayRandomEntry);
+    });
+
+    // See newer than what is currently displayed
+    $("#btnSeeOlder").on("click", function(e) {
+      console.log("Currently reading entry id: " + app.last_read);
+      appDb.getPrev(app.last_read, app.displayRandomEntry);
+    });
+
     // Backup entries to the cloud
     $('#btnBackup').on('click', function () {
       var passphrase = $("#passphrase").val();
@@ -178,6 +191,13 @@ var app = {
 
     $(document).on('pageshow', '#see-more-page', function(){
       console.log("Showing see-more-page");
+
+      // Update the current memory count 
+      appDb.getAllEntries(function (count) {
+        $(".totalEntries").text(count + " memories");
+      });
+
+      // Fetch a random entry to begin with.
       appDb.getRandomEntry(app.displayRandomEntry);
     });
 
@@ -375,6 +395,12 @@ var app = {
     console.log("Changing current Img to null");
     $("#currentEntryImgID").attr("src", "");
 
+    console.log("Calculating number of entries...");
+    appDb.getAllEntries(function (count) {
+      console.log("There are now " + count + "memories");
+      $(".totalEntries").text(count + " memories");
+    });
+
     $.mobile.changePage("#entry-added-page");
     toastr.success("Entry added.");
   },
@@ -392,17 +418,19 @@ var app = {
      " [<a href='javascript:void(0);' onclick=\'html5rocks.webdb.deleteTodo(" +
      row.ID +");\'>Delete</a>]</li>";
   },
-  displayRandomEntry: function (row, totalRows) {
+  displayRandomEntry: function (row) {
     if (row !== null) {
 
       console.log("Entry date: " + row.added_on);
-      console.log("Total entries: " + totalRows);
+      console.log("Row entry: " + row.entry);
+
+      // Let's save this ID. This is needed for displaying newer, and older entries
+      app.last_read = row.ID;
       
       // To clear an img, it's not enough to set src to ""!
       $(".randomEntryImgID").hide();
       $(".entry-date").text("");
       $(".randomEntry").text("");
-      $(".totalEntries").text("");
 
       $("#starBtnRdOnly").addClass("fa-star-o fa-star");
       
@@ -410,7 +438,6 @@ var app = {
       $(".entry-date").text($.timeago(row.added_on));
       $(".randomEntry").text(row.entry);
       $(".label-past").text("Something you wrote");
-      $(".totalEntries").text(totalRows + " memories");
 
       // Does the entry have any attachments? Display them!
       console.log("Looking for attachments for entry ID: " + row.ID);

@@ -139,23 +139,32 @@
           <div data-role="content">
             <div class="inset">
               <h2>You have <span class="totalEntries"></span></h2>
-              <button id="btnSeeRandom"
-                      type="submit" 
-                      data-inline="true" 
-                      class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
-                      <i class="lIcon fa fa-random"></i>See more
-              </button>
-              <span class="label-past"></span>
-              <strong><span class="entry-date"><span></strong>...
-              <blockquote>
-                <div style="float:right">
-                  <a href="#">
-                      <i id="starBtnRdOnly" class="fa fa-2x"></i>
-                  </a>
-                </div>
-                <span class="randomEntry"></span>
-                <img class="randomEntryImgID" width="250px" src=""/>
-              </blockquote>
+              <div class="ui-grid-b">
+                  <div class="ui-block-a" style="width:30%;" align="left">
+                    <a id="btnSeeNewer" href="#" data-role="button" data-icon="carat-l" data-iconpos="top">Newer</a>
+                  </div>
+                  <div class="ui-block-b" style="width:40%" align="center">
+                    <a id="btnSeeRandom" href="#" data-role="button" data-icon="recycle" data-iconpos="top">Random</a>
+                  </div>
+                  <div id="btnSeeOlder" class="ui-block-c" style="width:30%" align="center">
+                    <a href="#" data-role="button" data-icon="carat-r" data-iconpos="top">Older</a>
+                  </div>
+              </div>
+              <ul data-nativedroid-plugin='cards'>
+                <li data-cards-type='text'>
+                  <span class="label-past"></span>
+                  <h1><span class="entry-date"><span>...</h1>
+                  <blockquote>
+                    <div style="float:right">
+                      <a href="#">
+                          <i id="starBtnRdOnly" class="fa fa-2x"></i>
+                      </a>
+                    </div>
+                    <span class="randomEntry"></span>
+                    <img class="randomEntryImgID" width="250px" src=""/>
+                  </blockquote>
+                </li>
+              </ul>
             </div>
           </div>
         </div>

@@ -1,0 +1,9 @@
+{
+    "name":"mylife",
+    "devDependencies": {
+        "grunt": "^0.4.5",
+        "grunt-exec": "*",
+        "grunt-contrib-watch": "*",
+        "matchdep": "*"
+    }
+}

@@ -78,6 +78,42 @@ var appDb = {
       appDb.onError);
     });
   },
+  getNext: function (id, cbfn) {
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM entries WHERE ID > ? ORDER BY ID",
+        [id],
+        function (tx, rs) {
+          console.log("Number of rows returned: " + rs.rows.length);
+          if (rs.rows.length > 0) {
+            var row = rs.rows.item(0);
+            if (cbfn !== undefined) {
+              cbfn(row);
+            }
+          } else {
+            toastr.warning("No more memories");
+          }
+        },
+        appDb.onError);
+    });
+  },
+  getPrev: function (id, cbfn) {
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM entries WHERE ID < ? ORDER BY ID",
+        [id],
+        function (tx, rs) {
+          console.log("Number of rows returned: " + rs.rows.length);
+          if (rs.rows.length > 0) {
+            var row = rs.rows.item(rs.rows.length - 1);
+            if (cbfn !== undefined) {
+              cbfn(row);
+            }
+          } else {
+            toastr.warning("No more memories");
+          }
+        },
+        appDb.onError);
+    });
+  },
   getAllEntries: function (cbfn) {
     appDb.db.transaction(function(tx) {
       tx.executeSql("SELECT COUNT(*) AS count FROM entries", [], function (tx, rs) {
@@ -113,7 +149,7 @@ var appDb = {
             var row = rs.rows.item(i);
 
             if (cbfn !== undefined) {
-              cbfn(row, len);
+              cbfn(row);
             }
           }
         },

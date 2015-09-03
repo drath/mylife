@@ -42,7 +42,12 @@ blockquote p {
 
 button.ui-btn {
   background-color: gray !important;
-  width: 100%;
+  width: auto;
+}
+
+a.ui-link.ui-btn {
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 #cameraBtn {
