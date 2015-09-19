@@ -22,30 +22,64 @@ var appDb = {
                     "memorables(ID INTEGER PRIMARY KEY ASC, entryId INTEGER)", []);
     });
   },
+
+  //
   // Adds a new entry, making sure to santize the entry for SQL inserting to db
+  //
+
   addEntry: function (entryText, cbfn) {
     appDb.db.transaction(function(tx){
+
       // The timeago jQuery plugin needs the data to be in ISO format.
+
       var addedOn = new Date().toISOString();
+
+      // Invalid chars can cause SQL to fail, remove them
+
       var santizedEntry = appDb.sanitiseForSql(entryText);
+
+      // Insert the sanitized text into the database
+
       tx.executeSql("INSERT INTO entries(entry, added_on) VALUES (?,?)",
           [santizedEntry, addedOn],
           function (tx, results){
-            console.log("Inserted new entry with ID: " + results.insertId);
+
+            // Also, post this memory to web
+            var memoryObj = {};
+            memoryObj["remoteId"] = results.insertId;
+            memoryObj["entry"] = entryText;
+            memoryObj["addedOn"] = addedOn;
+            ajax.sendToWeb(memoryObj);
+
+            // Done, callback
+
             if (cbfn !== undefined) {
-              cbfn(results.insertId, entryText);
+              cbfn(results.insertId, entryText, addedOn);
             }
           },
           appDb.onError);
      });
 
   },
+
+  //
+  // Update the entry
+  //
+
   updateEntry: function (id, entry, cbfn) {
-    console.log("Updating ID: " + id);
     appDb.db.transaction(function(tx) {
       tx.executeSql("UPDATE entries SET entry = ? WHERE ID = ?",
         [entry, id],
         function (tx, results) {
+
+          // Post to web
+          var memoryObj = {};
+          memoryObj["remoteId"] = id;
+          memoryObj["entry"] = entry;
+          ajax.sendToWeb(memoryObj);
+
+          // Done, callback
+
           if (cbfn !== undefined) {
             cbfn();
           }
@@ -53,6 +87,11 @@ var appDb = {
         appDb.onError);
     });
   },
+
+  //
+  // Delete an entry
+  //
+
   deleteEntry: function (id, cbfn) {
     console.log("Deleting ID: " + id);
     appDb.db.transaction(function(tx) {
@@ -114,12 +153,21 @@ var appDb = {
         appDb.onError);
     });
   },
-  getAllEntries: function (cbfn) {
+  getEntryCount: function (cbfn) {
     appDb.db.transaction(function(tx) {
       tx.executeSql("SELECT COUNT(*) AS count FROM entries", [], function (tx, rs) {
         var count = rs.rows.item(0).count;
         if (cbfn !== undefined) {
           cbfn(count);
+        }
+      }, appDb.onError);
+    });
+  },
+  getAllEntries: function (cbfn) {
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM entries", [], function (tx, rs) {
+        if (cbfn !== undefined) {
+          cbfn(rs.rows);
         }
       }, appDb.onError);
     });
@@ -202,6 +250,16 @@ var appDb = {
     console.log("inside getAttachmentsByEntryId for ID: " + entryId);
     appDb.db.transaction(function(tx) {
       tx.executeSql("SELECT * FROM attachments WHERE entryId=?",
+        [entryId],
+        function (tx, rs) {
+          cbfn(rs.rows);
+        },
+        appDb.onError);
+    });
+  },
+  getLastAttachmentByEntryId: function (cbfn, entryId) {
+    appDb.db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM attachments WHERE entryId=? ORDER BY ID DESC LIMIT 1",
         [entryId],
         function (tx, rs) {
           cbfn(rs.rows);

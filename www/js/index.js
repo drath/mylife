@@ -82,6 +82,10 @@ var app = {
 
     });
 
+    // Init the auth component
+
+    auth.init();
+
     // Initialize database
     appDb.open();
     appDb.createTable();
@@ -99,9 +103,6 @@ var app = {
     // Login button handler
     $("#btnLogin").on("click", function () {
       console.log("Inside login click handler function");
-      console.log("Auth is: " + auth);
-      auth.init();
-
       console.log("Calling authentication subroutine");
       auth.googleAuth(app.authSuccess);
     });
@@ -140,21 +141,21 @@ var app = {
 
     // Backup entries to the cloud
     $('#btnBackup').on('click', function () {
-      var passphrase = $("#passphrase").val();
-      app.backup(passphrase);
+      //var passphrase = $("#passphrase").val();
+      app.backup();
     });
 
     // Restore entries from the cloud
-    $('#btnRestore').on('click', function(e){
-      navigator.notification.confirm(
-        "This will overwrite all memories on phone. Are you sure?",
-        function (buttonIndex) {
-          if (buttonIndex === 1) {
-            var passphrase = $("#passphrase").val();
-            app.restore(passphrase);
-          }
-        });
-    });
+    // $('#btnRestore').on('click', function(e){
+    //   navigator.notification.confirm(
+    //     "This will overwrite all memories on phone. Are you sure?",
+    //     function (buttonIndex) {
+    //       if (buttonIndex === 1) {
+    //         var passphrase = $("#passphrase").val();
+    //         app.restore(passphrase);
+    //       }
+    //     });
+    // });
 
     //Mark a memory as important
     $('#starBtn').on('click', function(e){
@@ -193,7 +194,7 @@ var app = {
       console.log("Showing see-more-page");
 
       // Update the current memory count 
-      appDb.getAllEntries(function (count) {
+      appDb.getEntryCount(function (count) {
         $(".totalEntries").text(count + " memories");
       });
 
@@ -212,17 +213,18 @@ var app = {
     //
 
     console.log("Show time now!");
-    var uid = window.localStorage.getItem("uid");
-    if (uid !== null && uid.length > 0) {
-      console.log("Found UID is: " + uid);
-      app.userName = uid;
+    app.showLoginPage();
 
-      console.log("Will display main page now");
-      app.showMainPage();
-    } else {
-      console.log("UID not found, will display login page!!");
-      app.showLoginPage();
-    }
+    // var uid = window.localStorage.getItem("uid");
+    // if (uid !== null && uid.length > 0) {
+    //   console.log("Found UID is: " + uid);
+    //   app.userName = uid;
+    //   console.log("Will display main page now");
+    //   app.showMainPage();
+    // } else {
+    //   console.log("UID not found, will display login page!!");
+    //   app.showLoginPage();
+    // }
 
     //
     // Run tests
@@ -238,21 +240,103 @@ var app = {
       toastr.warning("Nothing to say? Nothing to save.");
     }
   },
-  backup: function (passphrase) {
-    if (passphrase.length > 0) {
-      app.passphrase = passphrase;
-      $("#passphrase").val("");
 
-      toastr.info("Backing up memories, please wait...", {
-        "timeOut": "3000"
-      });
-      appDb.export(passphrase, app.userName, function (){
-        toastr.success("Backed up all memories to the cloud successfully.");
-      });
-    } else {
-      toastr.error("Please enter the secret passphrase.");
-    }
+  //
+  // TBD: This function will be removed once the migration is complete
+  //
+
+  backup: function () {
+
+    toastr.info("Backing up memories...", {
+      "timeOut": "3000"
+    });
+
+    // Now post all the entries to the web
+
+    appDb.getAllEntries(function (rows) {
+
+      for (var i = 0; i < rows.length; ++i) {
+
+        var row = rows.item(i);
+        console.log("Row entry is: " + row.entry);
+
+        // We want to send id, entry and when it was added
+
+        var memoryObj = {};
+        memoryObj["remoteId"] = row.ID;
+        memoryObj["entry"] = row.entry;
+        memoryObj["addedOn"] = row.added_on;
+
+        // Get attachments and send
+
+        app.sendWithAttachmentData(row.ID, memoryObj);
+
+      }
+    });
+
   },
+
+  //
+  // For this memory, get the last attach
+  //
+
+  sendWithAttachmentData: function (id, memoryObj) {
+
+      appDb.getLastAttachmentByEntryId(function (attachments) {
+
+      if (attachments.length > 0) {
+
+        // Need a fileEntry object from the path
+
+        window.resolveLocalFileSystemURL(attachments.item(0).path,
+
+          function(fileEntry) {
+
+            // Get a reader
+
+            fileEntry.file(function (readable) {
+              
+              var reader = new FileReader();
+
+              reader.onloadend = function (evt) {
+
+                // We have data
+
+                var dataURL = evt.target.result;
+
+                // Add the binary data to the payload
+
+                memoryObj["img"] = dataURL;
+
+                // And send to the server
+
+                ajax.sendToWeb(memoryObj);
+
+                toastr.success("Sending memory to web, please wait...");
+                
+              };
+
+            // Start reading! 
+
+            reader.readAsDataURL(readable);
+
+            }, app.fsFail);
+
+          }, appDb.failFile);
+
+      } else {
+
+        console.log("No attachments found, just send this plain entry");
+        ajax.sendToWeb(memoryObj);
+      }
+    }, id);
+
+  },
+
+  //
+  // TBD: This function needs to be re-written to work with the new server
+  //
+
   restore: function (passphrase) {
     if (passphrase.length > 0) {
       app.passphrase = passphrase;
@@ -306,7 +390,7 @@ var app = {
   attachPicture: function (source) {
     var photo_split = "";
 
-    console.log("Inside FUNC attach picture: " + source);
+    console.log("Inside FUNCTION attach picture: " + source);
     var options = {
       quality: 75,
       targetWidth: 800,
@@ -349,10 +433,38 @@ var app = {
 
             // origFileEntry is always modified.jpg, if source is gallery. Let's randomize it.
             var newName = app.userName + "-" + Date.now() + "-" + origFileEntry.name;
-            console.log("New name is: " + newName);
+            console.log("New FILENAME is is is is is: " + newName);
             appFile.moveFile2(origFileEntry, app.rootDir, newName, function (movedFileEntry) {
+              
               appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
+              
+              console.log("Setting src!");
               $("#currentEntryImgID").attr("src", movedFileEntry.toURL());
+              console.log("ddddd");
+
+              //
+              // Now post this attachment to the web
+              //
+
+              console.log("Reading attachment as base 64 encoding");
+              movedFileEntry.file(function (readable) {
+                console.log("Creating the reader object");
+                var reader = new FileReader();
+                reader.onloadend = function (evt) {
+                  console.log("Inside onloadend");
+                  var dataURL = evt.target.result;
+                  console.log("Binary image data is: " + dataURL);
+
+                  var memoryObj = {};
+                  memoryObj["img"] = dataURL;
+                  memoryObj["remoteId"] = app.last_inserted;
+                  ajax.sendToWeb(memoryObj);
+
+                };
+                reader.readAsDataURL(readable);
+              }, app.fsFail);
+
+
             });
           },
           null
@@ -386,7 +498,7 @@ var app = {
     console.log("Switching to main page NOW!");
     $.mobile.changePage("#main-page");
   },
-  switchEntryAddedPage: function (lastEntryId, entryText) {
+  switchEntryAddedPage: function (lastEntryId, entryText, addedOn) {
     console.log("Last entry ID: " + lastEntryId);
     app.last_inserted = lastEntryId;
     $("#note").val(""); //not needed
@@ -403,12 +515,13 @@ var app = {
     $("#starBtn").removeClass("fa-star").addClass("fa-star-o fa-star");
 
     console.log("Calculating number of entries...");
-    appDb.getAllEntries(function (count) {
+    appDb.getEntryCount(function (count) {
       console.log("There are now " + count + "memories");
       $(".totalEntries").text(count + " memories");
     });
 
     $.mobile.changePage("#entry-added-page");
+    
     toastr.success("Entry added.");
   },
   displayAllEntries: function (tx, rs) {

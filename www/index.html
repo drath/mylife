@@ -23,11 +23,8 @@
     <head>
           <title>My Life</title>
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <!-- Enable all requests, inline styles and eval() -->
-          <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'">
-<!--           <link href='http://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'> -->
-          <!-- nativeDroid core CSS -->
-          <!-- <link rel="stylesheet" type="text/css" href="css-ext/font-awesome-4.3.0/css/font-awesome.min.css"> -->
+          <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; script-src 'self' 'unsafe-inline' https://cdn.firebase.com https://*.firebaseio.com; connect-src *">
+
           <link rel="stylesheet" href="css-ext/nativedroid/font-awesome.min.css" />
           <link rel="stylesheet" href="css-ext/jquery.mobile-1.4.5.min.css" />
           <link rel="stylesheet" href="css-ext/nativedroid/jquerymobile.nativedroid.css" />
@@ -44,6 +41,7 @@
           <script src="js-ext/jquery.timeago.js"></script>
           <script src="js-ext/firebase.js"></script>
           <script src="js-ext/toastr.js"></script>
+          <script src="js/ajax.js"></script>
           <script src="js/file.js"></script>
           <script src="js/util.js"></script>
           <script src="js/filetransfer.js"></script>
@@ -178,24 +176,25 @@
           <div data-role="content">
             <div class="inset">
               <h2>Backup <span class="totalEntries"></span></h2>
-              <input id="passphrase" 
+              <!-- <input id="passphrase" 
                 type="text"
                 placeholder="Enter secret passphrase...">
-              </input>
+              </input> -->
               <button id="btnBackup"
                       type="submit" 
                       data-inline="true" 
                       class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
                       <i class="lIcon fa fa-cloud-upload"></i>Backup
               </button>
-              <button id="btnRestore"
+<!--               <button id="btnRestore"
                       type="submit" 
+                      style="visibility:none"
                       data-inline="true" 
                       class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
                       <i class="lIcon fa fa-cloud-download"></i>Restore
-              </button> 
-              <h4>The passphrase is case sensitive. To restore memories you
-                must use the same passphrase you used to backup.</h4>
+              </button>  -->
+              <h4>Click the backup button to upload all memories on phone to the web. This
+                is a one time activity. New memories are automatically uploaded.</h4>
             </div>
           </div>
         </div>
