@@ -417,21 +417,8 @@ var app = {
 
             console.log("origFileEntry:" + origFileEntry.name);
 
-            // Prefix the user-Id make it unique when uploaded to the server
-            //console.log("origFileEntry-fullpath: " + origFileEntry.fullPath);
-            //console.log("imageUri: " + imageUri);
-            // appFile.renameFile(origFileEntry.fullPath,
-            //   app.userName + "-" + origFileEntry.name,
-            //   function (renamedFileEntry) {
-
-            //   // And move it out of the cache directory so it won't get flushed by OS
-            //   appFile.moveFile(renamedFileEntry, app.rootDir, function (movedFileEntry) {
-            //     appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
-            //     $("#currentEntryImgID").attr("src", movedFileEntry.toURL());
-            //   });
-            // });
-
             // origFileEntry is always modified.jpg, if source is gallery. Let's randomize it.
+            
             var newName = app.userName + "-" + Date.now() + "-" + origFileEntry.name;
             console.log("New FILENAME is is is is is: " + newName);
             appFile.moveFile2(origFileEntry, app.rootDir, newName, function (movedFileEntry) {
@@ -440,11 +427,8 @@ var app = {
               
               console.log("Setting src!");
               $("#currentEntryImgID").attr("src", movedFileEntry.toURL());
-              console.log("ddddd");
 
-              //
               // Now post this attachment to the web
-              //
 
               console.log("Reading attachment as base 64 encoding");
               movedFileEntry.file(function (readable) {
