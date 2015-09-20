@@ -76,7 +76,7 @@ var appDb = {
           // Post to web
           var memoryObj = {};
           memoryObj["remoteId"] = id;
-          memoryObj["entry"] = entry;
+          memoryObj["entry"] = sjcl.encrypt("passphrase", entry);
           ajax.sendToWeb(memoryObj);
 
           // Done, callback

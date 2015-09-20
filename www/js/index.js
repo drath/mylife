@@ -264,7 +264,7 @@ var app = {
 
         var memoryObj = {};
         memoryObj["remoteId"] = row.ID;
-        memoryObj["entry"] = row.entry;
+        memoryObj["entry"] = sjcl.encrypt("passphrase", row.entry);
         memoryObj["addedOn"] = row.added_on;
 
         // Get attachments and send
