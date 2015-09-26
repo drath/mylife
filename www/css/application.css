@@ -85,3 +85,13 @@ a.ui-link.ui-btn {
   text-align: right;
   padding: 5px;
 }
+
+.center-button{
+  margin: 0 auto;
+  vertical-align: middle;
+}
+
+/* Top margin for some elements */
+.top-margin-1-5 {
+    margin-top:1.5em;
+}

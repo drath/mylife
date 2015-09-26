@@ -51,7 +51,9 @@
           <script src="js/index.js"></script>
     </head>
     <body>
+
         <!-- Main Page -->
+        
         <div data-role="page" data-theme='b' id="main-page" class="ui-page ui-page-theme-b">
             <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
               <h1>My Life</h1>
@@ -89,8 +91,10 @@
             <!-- <div data-role="footer">
               <a href="tests/index.html" data-ajax="false">Run Tests NOW</a>
             </div> -->
-        </div>
+        </div> <!--//Main page -->
+
         <!-- Entry added page -->
+
         <div data-role="page" data-theme="b" id="entry-added-page">
           <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
             <h1>My Life</h1>
@@ -125,8 +129,10 @@
               <a href="#main-page">Add one more?</a>
             </div>
           </div>
-        </div>
+        </div> <!--//Entry added page-->
+
         <!-- See more page -->
+
         <div data-role="page" data-theme="b" id="see-more-page">
           <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
             <h1>My Life</h1>
@@ -165,8 +171,10 @@
               </ul>
             </div>
           </div>
-        </div>
+        </div> <!--//See more page-->
+
         <!--Settings Page -->
+
         <div data-role="page" data-theme="b" id="settings-page">
           <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
             <h1>My Life</h1>
@@ -197,21 +205,26 @@
                 is a one time activity. New memories are automatically uploaded.</h4>
             </div>
           </div>
-        </div>
+        </div><!--//settings page-->
+
         <!-- Login Page -->
+
         <div data-role="page" data-theme="b" id="login-page">
           <div data-role="header" data-position="fixed" data-tap-toggle="false" data-theme='b'>
             <h1>My Life</h1>
           </div>
           <div data-role="content">
+            <h2 class="center" style="margin-top:3em;">Welcome!</h2>
             <button id="btnLogin"
                     type="submit" 
                     data-inline="true" 
-                    class="ui-btn ui-btn-inline ui-shadow ui-corner-all">
-                    <i class="lIcon fa fa-sign-in"></i>Login using Google Account
+                    class="ui-btn center-button top-margin-1-5">
+                    <i class="lIcon fa fa-google-plus"></i>Login using Google
             </button>
+
           </div>
-        </div>
+        </div> <!--//login page-->
+
         <script src="js-ext/nativedroid.script.js"></script>
         <script type="text/javascript">
             app.initialize();
