@@ -1,20 +1,6 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the
+ * Main file
+ * (c) Devendra Rath, 2015
  */
 var app = {
 
@@ -26,18 +12,25 @@ var app = {
   last_read: null,
 
   // Application Constructor
+
   initialize: function() {
       this.bindEvents();
   },
+
   // Bind Event Listeners, typically 'load', 'deviceready', 'offline', and 'online'
+
   bindEvents: function() {
       document.addEventListener('deviceready', this.onDeviceReady, false);
   },
+
   // deviceready Event Handler
+
   onDeviceReady: function() {
       app.receivedEvent('deviceready');
   },
+
   // Update DOM on a Received Event
+
   receivedEvent: function(id) {
 
     console.log("jQuery version: " + jQuery.fn.jquery);
@@ -123,41 +116,34 @@ var app = {
     });
 
     // See random button: Show a random entry
+
     $('#btnSeeRandom').on('click', function(e){
       appDb.getRandomEntry(app.displayRandomEntry);
     });
 
     // See newer than what is currently displayed
+
     $("#btnSeeNewer").on("click", function(e) {
       console.log("Currently reading entry id: " + app.last_read);
       appDb.getNext(app.last_read, app.displayRandomEntry);
     });
 
     // See newer than what is currently displayed
+
     $("#btnSeeOlder").on("click", function(e) {
       console.log("Currently reading entry id: " + app.last_read);
       appDb.getPrev(app.last_read, app.displayRandomEntry);
     });
 
     // Backup entries to the cloud
+
     $('#btnBackup').on('click', function () {
       //var passphrase = $("#passphrase").val();
       app.backup();
     });
 
-    // Restore entries from the cloud
-    // $('#btnRestore').on('click', function(e){
-    //   navigator.notification.confirm(
-    //     "This will overwrite all memories on phone. Are you sure?",
-    //     function (buttonIndex) {
-    //       if (buttonIndex === 1) {
-    //         var passphrase = $("#passphrase").val();
-    //         app.restore(passphrase);
-    //       }
-    //     });
-    // });
+    // Mark a memory as important
 
-    //Mark a memory as important
     $('#starBtn').on('click', function(e){
       if (this.className.indexOf("fa-star-o") > -1) {
         appDb.addMemorable(app.last_inserted);
@@ -168,6 +154,7 @@ var app = {
     });
 
     // Take a picture using camera, picture is stored in MyLife directory
+
     $('#cameraBtn').on('click', function(e){
       e.preventDefault();
       app.attachPicture(navigator.camera.PictureSourceType.CAMERA);
@@ -176,6 +163,7 @@ var app = {
     // Attach a picture from the gallery. Warning: The picture is not copied
     // to the MyLife directory, so if the picture is deleted from the gallery
     // the memory entry will be corrupted. Maybe we should make a copy? (TBD)
+
     $('#galleryBtn').on('click', function(e){
       e.preventDefault();
       app.attachPicture(navigator.camera.PictureSourceType.SAVEDPHOTOALBUM);
@@ -194,11 +182,13 @@ var app = {
       console.log("Showing see-more-page");
 
       // Update the current memory count 
+
       appDb.getEntryCount(function (count) {
         $(".totalEntries").text(count + " memories");
       });
 
       // Fetch a random entry to begin with.
+
       appDb.getRandomEntry(app.displayRandomEntry);
     });
 
@@ -213,7 +203,8 @@ var app = {
     //
 
     console.log("Show time now!");
-    app.showLoginPage();
+
+    $.mobile.changePage("#login-page");
 
     // var uid = window.localStorage.getItem("uid");
     // if (uid !== null && uid.length > 0) {
@@ -232,10 +223,14 @@ var app = {
 
 
   },
+
+  //
+  // Add a new entry, then show it in a new page.
+  //
+
   addEntry: function (entryText) {
     if (entryText.length > 0) {
       appDb.addEntry(entryText, app.switchEntryAddedPage);
-      //appDb.getRandomEntry(app.displayRandomEntry);
     } else {
       toastr.warning("Nothing to say? Nothing to save.");
     }
@@ -277,7 +272,7 @@ var app = {
   },
 
   //
-  // For this memory, get the last attach
+  // For this memory, get the last attachment
   //
 
   sendWithAttachmentData: function (id, memoryObj) {
@@ -353,6 +348,11 @@ var app = {
       toastr.error("Please enter the secret passphrase.");
     }
   },
+
+  //
+  // FIXME: Remove this function
+  //
+
   onImportSuccess: function (count) {
     
     // FIXME: This message is technically incorrect since we have
@@ -375,6 +375,11 @@ var app = {
     });
 
   },
+
+  //
+  // FIXME: Can this be moved to the auth module?
+  //
+
   authSuccess: function (displayName, uid) {
     console.log("Inside authSuccess: displayName is " + displayName);
     console.log("Inside authSuccess: uid is " + uid);
@@ -387,6 +392,11 @@ var app = {
     console.log("Will display main page now!");
     app.showMainPage();
   },
+
+  //
+  // FIXME: Move to camera.js
+  //
+
   attachPicture: function (source) {
     var photo_split = "";
 
@@ -459,9 +469,6 @@ var app = {
         toastr.warning(message + " Please make sure that selected file is an image");
       },
       options);
-  },
-  showLoginPage: function () {
-    $.mobile.changePage("#login-page");
   },
   showMainPage: function () {
     $("#note").val("");
@@ -572,18 +579,16 @@ var app = {
       $(".randomEntryImgID").attr("src", attachmentRow.path);
       $(".randomEntryImgID").show();
     }
-    //for (var i = 0; i < attachmentRows.length; ++i) {
-      //var attachmentRow = attachmentRows.item(i);
-      // For now, limiting to one display only. Should be easy to display more
-      // without changing the db schema.
-      //$(".randomEntryImgID").attr("src", attachmentRow.path);
-      //console.log("PATHPATH: " + row.path);
-    //}
   },
   fsFail: function (error) {
     console.log("Inside fsFail, error code is: " + error.code);
     util.printError("File operation failed", error);
   },
+
+  //
+  // Register for Google cloud notifications
+  //
+
   registerGCM: function (senderId) {
     var pushNotification = window.plugins.pushNotification;
     pushNotification.register(function () {
@@ -597,6 +602,11 @@ var app = {
                                 "ecb":"app.onNotificationGCM"
                               });
   },
+
+  //
+  // Handles callbacks from Google cloud (for notifications)
+  //
+
   onNotificationGCM: function(e) {
       //alert("inside onNotificationGCM");
       switch( e.event )
