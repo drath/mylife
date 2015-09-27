@@ -422,53 +422,82 @@ var app = {
           imageUri = "content://media/external/images/media/"+photo_split[1];
         }
 
-        window.resolveLocalFileSystemURL(imageUri,
-          function(origFileEntry) {
+        app.attachFile(imageUri, function (movedUri) {
+          $("#currentEntryImgID").attr("src", movedUri);
+        });
 
-            console.log("origFileEntry:" + origFileEntry.name);
-
-            // origFileEntry is always modified.jpg, if source is gallery. Let's randomize it.
-            
-            var newName = app.userName + "-" + Date.now() + "-" + origFileEntry.name;
-            console.log("New FILENAME is is is is is: " + newName);
-            appFile.moveFile2(origFileEntry, app.rootDir, newName, function (movedFileEntry) {
-              
-              appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
-              
-              console.log("Setting src!");
-              $("#currentEntryImgID").attr("src", movedFileEntry.toURL());
-
-              // Now post this attachment to the web
-
-              console.log("Reading attachment as base 64 encoding");
-              movedFileEntry.file(function (readable) {
-                console.log("Creating the reader object");
-                var reader = new FileReader();
-                reader.onloadend = function (evt) {
-                  console.log("Inside onloadend");
-                  var dataURL = evt.target.result;
-                  console.log("Binary image data is: " + dataURL);
-
-                  var memoryObj = {};
-                  memoryObj["img"] = dataURL;
-                  memoryObj["remoteId"] = app.last_inserted;
-                  ajax.sendToWeb(memoryObj);
-
-                };
-                reader.readAsDataURL(readable);
-              }, app.fsFail);
-
-
-            });
-          },
-          null
-        );
       },
       function(message){
         console.log("cancelled: " + message);
         toastr.warning(message + " Please make sure that selected file is an image");
       },
       options);
+  },
+
+  //
+  // Given a file uri, attach it to the database and send to server
+  //
+
+  attachFile: function (uri, cbfn) {
+
+    // To move the file, get a file entry object
+
+    window.resolveLocalFileSystemURL(uri, function(origFileEntry) {
+
+      console.log("origFileEntry:" + origFileEntry.name);
+
+      // Create a new unique name
+
+      var newName = app.userName + "-" + Date.now() + "-" + origFileEntry.name;
+
+      console.log("New FILENAME is is is is is: " + newName);
+      
+      // Rename and move the file to the mylife dir
+
+      appFile.moveFile2(origFileEntry, app.rootDir, newName, function (movedFileEntry) {
+        
+        // Update the attachments table 
+
+        appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
+
+        console.log("Reading attachment as base 64 encoding");
+
+        // Now post this attachment to the web. FIXME: This posts as web
+
+        movedFileEntry.file(function (readable) {
+          console.log("Creating the reader object");
+          var reader = new FileReader();
+          reader.onloadend = function (evt) {
+
+            // We have binary data now
+
+            console.log("Inside onloadend");
+            var dataURL = evt.target.result;
+            console.log("Binary image data is: " + dataURL);
+
+            // Attach and send!
+
+            var memoryObj = {};
+            memoryObj["img"] = dataURL;
+            memoryObj["remoteId"] = app.last_inserted;
+            ajax.sendToWeb(memoryObj);
+
+          };
+
+          // Read the file as binary 
+
+          reader.readAsDataURL(readable);
+        }, app.fsFail);
+
+        // Let the caller know of the new location
+
+        if (cbfn !== undefined) {
+          cbfn(movedFileEntry.toURL());
+        }
+
+      });
+    },
+    null);
   },
   showMainPage: function () {
     $("#note").val("");
