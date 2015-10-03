@@ -207,6 +207,7 @@ var page_thankyou = {
             // Attach and send!
 
             var memoryObj = {};
+            memoryObj["attachmentName"] = newName;
             memoryObj["img"] = dataURL;
             memoryObj["remoteId"] = page_thankyou.last_inserted;
             ajax.sendToWeb(memoryObj);
