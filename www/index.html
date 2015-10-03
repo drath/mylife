@@ -41,6 +41,11 @@
           <script src="js-ext/jquery.timeago.js"></script>
           <script src="js-ext/firebase.js"></script>
           <script src="js-ext/toastr.js"></script>
+          <script src="js/dummy.js"></script>
+          <script src="js/entry_card.js"></script>
+          <script src="js/page_seemore.js"></script>
+          <script src="js/page_thankyou.js"></script>
+          <script src="js/page_home.js"></script>
           <script src="js/ajax.js"></script>
           <script src="js/file.js"></script>
           <script src="js/util.js"></script>
@@ -78,19 +83,25 @@
               </div>
               <ul data-nativedroid-plugin='cards'>
                 <li data-cards-type='text'>
-                  <span class="label-past"></span>
-                  <h1><span class="entry-date"><span>...</h1>
+                  <span id="label-past-home"></span>
+                  <h1><span class="entryDate"><span>...</h1>
                   <blockquote>
-                    <span class="randomEntry"></span>
-                    <img class="randomEntryImgID" width="250px" src=""/>
+                    <div style="float:right">
+                      <a href="#">
+                          <i class="starBtnRdOnly fa fa-2x"></i>
+                      </a>
+                    </div>
+                    <span class="entryText"></span>
+                    <img class="entryImage" width="250px" src=""/>
+                    <audio class="entryAudio" style="display:none;" src="" controls>
                   </blockquote>
                 </li>
               </ul>
               <h3 id="randomQuote" style=""></h3>
             </div>
-            <!-- <div data-role="footer">
+            <div data-role="footer">
               <a href="tests/index.html" data-ajax="false">Run Tests NOW</a>
-            </div> -->
+            </div>
         </div> <!--//Main page -->
 
         <!-- Entry added page -->
@@ -105,18 +116,21 @@
           <div data-role="content">
             <div class="inset">
               <blockquote>
-                <textarea id="currentEntry" 
-                  cols="40" 
-                  rows="8">
-                </textarea>  
-                <img id="currentEntryImgID" width="250px" src=""/>           
+                <textarea class="entryText" cols="40" rows="8"></textarea>  
+                <img class="entryImage" width="250px" src=""/>
+                <audio class="entryAudio" style="display:none;" src="" controls>
+                </audio>          
               </blockquote>
+
               <div class="entryActionBar">
                 <a href="#">
                     <i id="starBtn" class="fa fa-star-o fa-star fa-2x"></i>
                 </a>
                 <a id="editCurrentMemoryBtn" href="#">
                   <i class="fa fa-pencil fa-2x"></i>
+                </a>
+                <a id="audioFileBtn" href="#">
+                  <i class="fa fa-file-audio-o fa-2x"></i>
                 </a>
                 <a id="cameraBtn" href="#">
                   <i class="fa fa-camera fa-2x"></i>
@@ -125,7 +139,7 @@
                   <i class="fa fa-picture-o fa-2x"></i>
                 </a>
               </div>
-              <h2>Thank you. You now have <span class="totalEntries"></span></h2>
+              <h2>Thank you. You now have <span id="totalEntriesThankyou"></span></h2>
               <a href="#main-page">Add one more?</a>
             </div>
           </div>
@@ -157,15 +171,16 @@
               <ul data-nativedroid-plugin='cards'>
                 <li data-cards-type='text'>
                   <span class="label-past"></span>
-                  <h1><span class="entry-date"><span>...</h1>
+                  <h1><span class="entryDate"><span>...</h1>
                   <blockquote>
                     <div style="float:right">
                       <a href="#">
-                          <i id="starBtnRdOnly" class="fa fa-2x"></i>
+                          <i class="starBtnRdOnly fa fa-2x"></i>
                       </a>
                     </div>
-                    <span class="randomEntry"></span>
-                    <img class="randomEntryImgID" width="250px" src=""/>
+                    <span class="entryText"></span>
+                    <img class="entryImage" width="250px" src=""/>
+                    <audio class="entryAudio" style="display:none;" src="" controls>
                   </blockquote>
                 </li>
               </ul>

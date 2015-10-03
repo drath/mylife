@@ -48,6 +48,12 @@
                             "xml": "<feature name=\"Globalization\"><param name=\"android-package\" value=\"org.apache.cordova.globalization.Globalization\" /></feature>",
                             "count": 1
                         }
+                    ],
+                    "/widget": [
+                        {
+                            "xml": "<feature name=\"FileChooser\"><param name=\"android-package\" value=\"com.megster.cordova.FileChooser\" /></feature>",
+                            "count": 1
+                        }
                     ]
                 }
             },
@@ -116,6 +122,16 @@
                         }
                     ]
                 }
+            },
+            "res/values/strings.xml": {
+                "parents": {
+                    "/*": []
+                }
+            },
+            "res/values/colors.xml": {
+                "parents": {
+                    "/*": []
+                }
             }
         }
     },
@@ -151,6 +167,9 @@
             "PACKAGE_NAME": "com.dstudio.mylife"
         },
         "cordova-plugin-globalization": {
+            "PACKAGE_NAME": "com.dstudio.mylife"
+        },
+        "com.megster.cordova.FileChooser": {
             "PACKAGE_NAME": "com.dstudio.mylife"
         }
     },

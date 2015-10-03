@@ -258,7 +258,7 @@ var appDb = {
         appDb.onError);
     });
   },
-  getLastAttachmentByEntryId: function (cbfn, entryId) {
+  getLastAttachmentByEntryId: function (entryId, cbfn) {
     appDb.db.transaction(function(tx) {
       tx.executeSql("SELECT * FROM attachments WHERE entryId=? ORDER BY ID DESC LIMIT 1",
         [entryId],

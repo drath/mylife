@@ -87,52 +87,11 @@ var app = {
     // Button handlers
     //
 
-    // Add note button: Save the entry to the entries table (in websql)
-    $('#btnAddNote').on("click", function(e){
-      var entryText = $("#note").val();
-      app.addEntry(entryText);
-    });
-
     // Login button handler
     $("#btnLogin").on("click", function () {
       console.log("Inside login click handler function");
       console.log("Calling authentication subroutine");
       auth.googleAuth(app.authSuccess);
-    });
-
-    // Edit current memory (the most recently added one)
-    $("#editCurrentMemoryBtn").on("click", function (e){
-      //$("#currentEntry").textinput("enable");
-      $("#currentEntry").focus();
-    });
-
-    $("#currentEntry").on("focusout", function (e){
-      var text = $("#currentEntry").val();
-      if (text.length > 0) {
-        appDb.updateEntry(app.last_inserted, text, function () {
-          toastr.success("Memory updated");
-        });
-      }
-    });
-
-    // See random button: Show a random entry
-
-    $('#btnSeeRandom').on('click', function(e){
-      appDb.getRandomEntry(app.displayRandomEntry);
-    });
-
-    // See newer than what is currently displayed
-
-    $("#btnSeeNewer").on("click", function(e) {
-      console.log("Currently reading entry id: " + app.last_read);
-      appDb.getNext(app.last_read, app.displayRandomEntry);
-    });
-
-    // See newer than what is currently displayed
-
-    $("#btnSeeOlder").on("click", function(e) {
-      console.log("Currently reading entry id: " + app.last_read);
-      appDb.getPrev(app.last_read, app.displayRandomEntry);
     });
 
     // Backup entries to the cloud
@@ -142,55 +101,13 @@ var app = {
       app.backup();
     });
 
-    // Mark a memory as important
-
-    $('#starBtn').on('click', function(e){
-      if (this.className.indexOf("fa-star-o") > -1) {
-        appDb.addMemorable(app.last_inserted);
-      } else {
-        appDb.removeMemorable(app.last_inserted);
-      }
-      $(this).toggleClass("fa-star-o");
-    });
-
-    // Take a picture using camera, picture is stored in MyLife directory
-
-    $('#cameraBtn').on('click', function(e){
-      e.preventDefault();
-      app.attachPicture(navigator.camera.PictureSourceType.CAMERA);
-    });
-
-    // Attach a picture from the gallery. Warning: The picture is not copied
-    // to the MyLife directory, so if the picture is deleted from the gallery
-    // the memory entry will be corrupted. Maybe we should make a copy? (TBD)
-
-    $('#galleryBtn').on('click', function(e){
-      e.preventDefault();
-      app.attachPicture(navigator.camera.PictureSourceType.SAVEDPHOTOALBUM);
-    });
-
-
     //
-    // Page initialization functions
+    // Initialize pages
     //
 
-    $(document).on('pageshow', '#main-page', function(){
-      app.showMainPage();
-    });
-
-    $(document).on('pageshow', '#see-more-page', function(){
-      console.log("Showing see-more-page");
-
-      // Update the current memory count 
-
-      appDb.getEntryCount(function (count) {
-        $(".totalEntries").text(count + " memories");
-      });
-
-      // Fetch a random entry to begin with.
-
-      appDb.getRandomEntry(app.displayRandomEntry);
-    });
+    page_thankyou.init();
+    page_home.init();
+    page_seemore.init();
 
     //
     // Initial file wrapper object
@@ -204,36 +121,27 @@ var app = {
 
     console.log("Show time now!");
 
-    $.mobile.changePage("#login-page");
+    //
 
-    // var uid = window.localStorage.getItem("uid");
-    // if (uid !== null && uid.length > 0) {
-    //   console.log("Found UID is: " + uid);
-    //   app.userName = uid;
-    //   console.log("Will display main page now");
-    //   app.showMainPage();
-    // } else {
-    //   console.log("UID not found, will display login page!!");
-    //   app.showLoginPage();
-    // }
+    var uid = window.localStorage.getItem("uid");
+    if (uid !== null && uid.length > 0) {
+      console.log("Found UID is: " + uid);
+      app.userName = uid;
+      console.log("Will display main page now");
+
+      page_home.display();
+      
+    } else {
+      console.log("UID not found, will display login page!!");
+      //app.showLoginPage();
+      $.mobile.changePage("#login-page");
+    }
 
     //
     // Run tests
     //
 
 
-  },
-
-  //
-  // Add a new entry, then show it in a new page.
-  //
-
-  addEntry: function (entryText) {
-    if (entryText.length > 0) {
-      appDb.addEntry(entryText, app.switchEntryAddedPage);
-    } else {
-      toastr.warning("Nothing to say? Nothing to save.");
-    }
   },
 
   //
@@ -390,159 +298,8 @@ var app = {
     // Initialize and display main page
 
     console.log("Will display main page now!");
-    app.showMainPage();
-  },
-
-  //
-  // FIXME: Move to camera.js
-  //
-
-  attachPicture: function (source) {
-    var photo_split = "";
-
-    console.log("Inside FUNCTION attach picture: " + source);
-    var options = {
-      quality: 75,
-      targetWidth: 800,
-      targetHeight: 800,
-      correctOrientation: true,
-      destinationType: navigator.camera.DestinationType.FILE_URI,
-      encodingType: Camera.EncodingType.JPEG,
-      sourceType: source
-    };
-
-    navigator.camera.getPicture(
-      function(imageUri){
-        console.log("Image URI is: " + imageUri);
-
-        // Hack, because of PhoneGap bug https://issues.apache.org/jira/browse/CB-5398
-        if (imageUri.substring(0,21)=="content://com.android") {
-          console.log("Splitting image URI");
-          photo_split = imageUri.split("%3A");
-          imageUri = "content://media/external/images/media/"+photo_split[1];
-        }
-
-        app.attachFile(imageUri, function (movedUri) {
-          $("#currentEntryImgID").attr("src", movedUri);
-        });
-
-      },
-      function(message){
-        console.log("cancelled: " + message);
-        toastr.warning(message + " Please make sure that selected file is an image");
-      },
-      options);
-  },
-
-  //
-  // Given a file uri, attach it to the database and send to server
-  //
-
-  attachFile: function (uri, cbfn) {
-
-    // To move the file, get a file entry object
-
-    window.resolveLocalFileSystemURL(uri, function(origFileEntry) {
-
-      console.log("origFileEntry:" + origFileEntry.name);
-
-      // Create a new unique name
-
-      var newName = app.userName + "-" + Date.now() + "-" + origFileEntry.name;
-
-      console.log("New FILENAME is is is is is: " + newName);
-      
-      // Rename and move the file to the mylife dir
-
-      appFile.moveFile2(origFileEntry, app.rootDir, newName, function (movedFileEntry) {
-        
-        // Update the attachments table 
-
-        appDb.addAttachment(movedFileEntry.toURL(), app.last_inserted);
-
-        console.log("Reading attachment as base 64 encoding");
-
-        // Now post this attachment to the web. FIXME: This posts as web
-
-        movedFileEntry.file(function (readable) {
-          console.log("Creating the reader object");
-          var reader = new FileReader();
-          reader.onloadend = function (evt) {
-
-            // We have binary data now
-
-            console.log("Inside onloadend");
-            var dataURL = evt.target.result;
-            console.log("Binary image data is: " + dataURL);
-
-            // Attach and send!
-
-            var memoryObj = {};
-            memoryObj["img"] = dataURL;
-            memoryObj["remoteId"] = app.last_inserted;
-            ajax.sendToWeb(memoryObj);
-
-          };
-
-          // Read the file as binary 
-
-          reader.readAsDataURL(readable);
-        }, app.fsFail);
-
-        // Let the caller know of the new location
-
-        if (cbfn !== undefined) {
-          cbfn(movedFileEntry.toURL());
-        }
-
-      });
-    },
-    null);
-  },
-  showMainPage: function () {
-    $("#note").val("");
-      
-    // Read a random entry back from the entries table
-    console.log("Getting random entry");
-    appDb.getRandomEntry(app.displayRandomEntry);
-
-    //Display the last received quote from the server
-    console.log("Checking Window.localStorage for quotes: " + window.localStorage);
-    var quote = window.localStorage.getItem("quote");
-
-    // Just in case the server sent us garbage data (undefined string)
-    if ( (quote !== null) && (quote !== "undefined") ) {
-      $("#randomQuote").text(quote);
-    }
-
-    console.log("Switching to main page NOW!");
+    //app.showMainPage();
     $.mobile.changePage("#main-page");
-  },
-  switchEntryAddedPage: function (lastEntryId, entryText, addedOn) {
-    console.log("Last entry ID: " + lastEntryId);
-    app.last_inserted = lastEntryId;
-    $("#note").val(""); //not needed
-    $("#randomEntryImgID").attr("src", ""); //not needed
-
-    console.log("Setting the new text to: " + entryText);
-    $("#currentEntry").val(entryText);
-
-    console.log("Changing current Img to null");
-    $("#currentEntryImgID").attr("src", "");
-
-    //Reset the star state to not-memorable
-    console.log("Resetting the star...");
-    $("#starBtn").removeClass("fa-star").addClass("fa-star-o fa-star");
-
-    console.log("Calculating number of entries...");
-    appDb.getEntryCount(function (count) {
-      console.log("There are now " + count + "memories");
-      $(".totalEntries").text(count + " memories");
-    });
-
-    $.mobile.changePage("#entry-added-page");
-    
-    toastr.success("Entry added.");
   },
   displayAllEntries: function (tx, rs) {
     var rowOutput = "";
@@ -558,45 +315,7 @@ var app = {
      " [<a href='javascript:void(0);' onclick=\'html5rocks.webdb.deleteTodo(" +
      row.ID +");\'>Delete</a>]</li>";
   },
-  displayRandomEntry: function (row) {
-    if (row !== null) {
-
-      console.log("Entry date: " + row.added_on);
-      console.log("Row entry: " + row.entry);
-
-      // Let's save this ID. This is needed for displaying newer, and older entries
-      app.last_read = row.ID;
-      
-      // To clear an img, it's not enough to set src to ""!
-      $(".randomEntryImgID").hide();
-      $(".entry-date").text("");
-      $(".randomEntry").text("");
-
-      $("#starBtnRdOnly").addClass("fa-star-o fa-star");
-      
-      // Update the UI  
-      $(".entry-date").text($.timeago(row.added_on));
-      $(".randomEntry").text(row.entry);
-      $(".label-past").text("Something you wrote");
-
-      // Does the entry have any attachments? Display them!
-      console.log("Looking for attachments for entry ID: " + row.ID);
-      appDb.getAttachmentsByEntryId(app.displayAttachments, row.ID);
-
-      // Is this a memorable entry?
-      console.log("Checking if this entry is memorable...");
-      appDb.isEntryMemorable(app.displayMemorable, row.ID);
-    } else {
-      console.log("No memories found"); //should never happen
-    }
-  },
-  displayMemorable: function (isMemorable) {
-    console.log("isMemorable is: " + isMemorable);
-    if (isMemorable === true) {
-      $("#starBtnRdOnly").toggleClass("fa-star-o");
-    }
-  },
-  displayAttachments: function (attachmentRows) {
+  getLastAttachment: function (attachmentRows, cbfn) {
     // Clear out old one
     console.log("Inside displayAttachments, rows retd: " + attachmentRows.length);
 
@@ -605,12 +324,13 @@ var app = {
       console.log("Number of attachments: " + attachmentRows.length);
       var lastAttachmentIndex = attachmentRows.length - 1;
       var attachmentRow = attachmentRows.item(lastAttachmentIndex);
-      $(".randomEntryImgID").attr("src", attachmentRow.path);
-      $(".randomEntryImgID").show();
+      
+      cbfn(attachmentRow.path); //attachmentRow is a Uri to the attachment
+
     }
   },
   fsFail: function (error) {
-    console.log("Inside fsFail, error code is: " + error.code);
+    toastr.warn("Internal error occurred: " + error.code);
     util.printError("File operation failed", error);
   },
 
