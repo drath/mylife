@@ -21,17 +21,83 @@ var page_thankyou = {
     // the memory entry will be corrupted. Maybe we should make a copy? (TBD)
 
     $('#galleryBtn').on('click', function(e){
+
       console.log("You clicked the gallery button");
       e.preventDefault();
       page_thankyou.attachPicture(navigator.camera.PictureSourceType.SAVEDPHOTOALBUM);
+
+    });
+
+    // Record a note (Placeholder for now, real button does not exist yet)
+
+    $("#recordNoteBtn").on("click", function (e) {
+
+      toastr.success("Recording audio");
+
+      navigator.device.capture.captureAudio(function (mediaFiles) {
+        toastr.success("Audio captured to: " + mediaFiles[0].fullPath);
+
+        // Attach the file and display it
+
+        page_thankyou.attachFile(mediaFiles[0].fullPath, function (movedUri) {
+          page_thankyou.showAttachment(movedUri);
+        });
+
+      });
+
+      toastr.success("No audio?");
+
     });
 
     // Attach an audio file
 
     $("#audioFileBtn").on("click", function (e) {
+
+      // Display the chooser dialog
+
       fileChooser.open(function (uri) {
-        page_thankyou.attachFile(uri, function (movedUri) {
-          page_thankyou.showAttachment(movedUri);
+
+        // Is audio format supported?
+
+        if (util.isAudioFile(uri) === false) {
+
+          toastr.error("Sorry, only audio files with .aac or .m4a extension supported");
+          return;
+        }
+
+        // Allow 100 KB or less only
+
+        console.log("Resolving URI: " + uri);
+
+        window.resolveLocalFileSystemURL(uri, function(fileEntry) {
+
+          fileEntry.file(function (file) {
+
+            if (file.size > 100000) {
+
+              toastr.error("Sorry, file size exceeds 100Kb. Please choose another file.");
+              return;
+
+            } else {
+
+              // Attach the file and display it
+
+              page_thankyou.attachFile(uri, function (movedUri) {
+                page_thankyou.showAttachment(movedUri);
+              });
+
+            }
+          }, function (error) {
+
+            // Could not resolve the file. The filename may contains certain chars like
+            // # (hash) which resolveLocalFileSystemURL does not handle well. Nothing we
+            // can do. :(
+
+            toastr.error("Unable to read file. Please make sure filename does not contain any special characters.");
+            appFile.fail(error);
+            return;
+
+          });
         });
       }, function () {
         toastr.error("Error choosing file: " + error);
@@ -240,7 +306,7 @@ var page_thankyou = {
 
     // Is this an audio attachment?
 
-    if (uri.indexOf("aac") !== -1) {
+    if (util.isAudioFile(uri) === true) {
 
       // Yes, show audio
 

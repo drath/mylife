@@ -9,6 +9,31 @@ var util = {
   getNameFromPath: function (fullPathName) {
     return fullPathName.replace(/^.*[\\\/]/, '');
   },
+
+  //
+  // Test if the input file is one of the supported audio forrmats
+  //
+
+  isAudioFile: function (uri) {
+
+    var extension = uri.split(".").pop();
+
+    switch(extension) {
+      
+      case "aac":
+        return true;
+
+      case "m4a":
+        return true;
+
+      default:
+        break;
+
+    }
+
+    return false;
+
+  },
   // FIXME: Remove from here
   printError: function (msg, error) {
     console.log("Inside printError");

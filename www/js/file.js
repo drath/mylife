@@ -9,6 +9,17 @@ var appFile = {
       appFile.fs = fileSystem;
     });
   },
+  getFileSize: function (fileName, cbfn) {
+    console.log("INSIDE getFile" + fileName);
+    appFile.fs.root.getFile(fileName, {
+      create: false,
+      exclusive: false
+    }, function (fileEntry) {
+      fileEntry.file(function (file) {
+        cbfn(file.size);
+      }, appFile.fail);
+    }, appFile.fail);
+  },
   // Move the file from current location to a location specified in destDirName
   moveFile: function (srcFileEntry, destDirName, cbfn) {
     appFile.fs.root.getDirectory(destDirName, {create: true}, function (destDirEntry) {
@@ -50,7 +61,6 @@ var appFile = {
         break;
       case FileError.NOT_FOUND_ERR:
         console.log("NOT_FOUND_ERR!");
-        toastr.error("");
         break;
       case FileError.SECURITY_ERR:
         console.log("SECURITY_ERR");

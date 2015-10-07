@@ -95,3 +95,7 @@ a.ui-link.ui-btn {
 .top-margin-1-5 {
     margin-top:1.5em;
 }
+
+.entryActionBar i {
+  margin-left: 10px;
+}
