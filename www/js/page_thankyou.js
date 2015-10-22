@@ -73,7 +73,7 @@ var page_thankyou = {
 
           fileEntry.file(function (file) {
 
-            if (file.size > 100000) {
+            if (file.size > 500000) {
 
               toastr.error("Sorry, file size exceeds 100Kb. Please choose another file.");
               return;

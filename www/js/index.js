@@ -185,7 +185,7 @@ var app = {
 
   sendWithAttachmentData: function (id, memoryObj) {
 
-      appDb.getLastAttachmentByEntryId(function (attachments) {
+      appDb.getLastAttachmentByEntryId(id, function (attachments) {
 
       if (attachments.length > 0) {
 
