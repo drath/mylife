@@ -35,13 +35,8 @@ var util = {
 
   },
   // FIXME: Remove from here
-  printError: function (msg, error) {
+  printError: function (error) {
     console.log("Inside printError");
-    console.log(msg);
-    if ((msg !== undefined) && (msg.length > 0)) {
-      console.log(msg);
-    }
-
     switch (error.code) {
       case FileError.ENCODING_ERR:
         console.log("ENCODING_ERR!");

@@ -34,6 +34,8 @@ var app = {
   receivedEvent: function(id) {
 
     console.log("jQuery version: " + jQuery.fn.jquery);
+    console.log("Received Event ID: " + id);
+    console.log("Application directory is: " + cordova.file.applicationDirectory);
 
     // Toast options
     toastr.options = {
@@ -145,7 +147,7 @@ var app = {
   },
 
   //
-  // TBD: This function will be removed once the migration is complete
+  // Push all memories to the web. Does not overwrite, if memory exists in the web already
   //
 
   backup: function () {
@@ -237,54 +239,6 @@ var app = {
   },
 
   //
-  // TBD: This function needs to be re-written to work with the new server
-  //
-
-  restore: function (passphrase) {
-    if (passphrase.length > 0) {
-      app.passphrase = passphrase;
-      $("#passphrase").val("");
-
-      toastr.info("Restoring memories, please wait...", {
-        "timeOut": "3000"
-      });
-
-      fileTransfer.download(app.userName + ".sql", function () {
-        appDb.import(passphrase, app.userName, app.onImportSuccess);
-      });
-    } else {
-      toastr.error("Please enter the secret passphrase.");
-    }
-  },
-
-  //
-  // FIXME: Remove this function
-  //
-
-  onImportSuccess: function (count) {
-    
-    // FIXME: This message is technically incorrect since we have
-    // not yet restored the attachments
-    toastr.success("Restored all memories from cloud backup.");
-
-    //
-    // Now, lets import all the attachments
-    //
-
-    appDb.getAllAttachments(function (rows) {
-      for(var i = 0; i < rows.length; ++i) {
-        var fileName = util.getNameFromPath(rows.item(i).path);
-        fileTransfer.download(fileName, function (entry) {
-          appFile.moveFile(entry, app.rootDir, function () {
-            console.log("Replaced attachment: " + entry.name);
-          });
-        });
-      }
-    });
-
-  },
-
-  //
   // FIXME: Can this be moved to the auth module?
   //
 
@@ -331,7 +285,7 @@ var app = {
   },
   fsFail: function (error) {
     toastr.warn("Internal error occurred: " + error.code);
-    util.printError("File operation failed", error);
+    util.printError(error);
   },
 
   //

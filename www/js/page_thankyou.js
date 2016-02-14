@@ -30,78 +30,43 @@ var page_thankyou = {
 
     // Record a note (Placeholder for now, real button does not exist yet)
 
-    $("#recordNoteBtn").on("click", function (e) {
+    // $("#recordNoteBtn").on("click", function (e) {
 
-      toastr.success("Recording audio");
+    //   toastr.success("Recording audio");
 
-      navigator.device.capture.captureAudio(function (mediaFiles) {
-        toastr.success("Audio captured to: " + mediaFiles[0].fullPath);
+    //   navigator.device.capture.captureAudio(function (mediaFiles) {
+    //     toastr.success("Audio captured to: " + mediaFiles[0].fullPath);
 
-        // Attach the file and display it
+    //     // Attach the file and display it
 
-        page_thankyou.attachFile(mediaFiles[0].fullPath, function (movedUri) {
-          page_thankyou.showAttachment(movedUri);
-        });
+    //     page_thankyou.attachFile(mediaFiles[0].fullPath, function (movedUri) {
+    //       page_thankyou.showAttachment(movedUri);
+    //     });
 
-      });
+    //   });
 
-      toastr.success("No audio?");
+    //   toastr.success("No audio?");
 
-    });
+    // });
 
     // Attach an audio file
 
     $("#audioFileBtn").on("click", function (e) {
 
+      e.preventDefault();
+
       // Display the chooser dialog
 
       fileChooser.open(function (uri) {
 
-        // Is audio format supported?
+        page_thankyou.attachAudio(uri);
 
-        if (util.isAudioFile(uri) === false) {
+      }, function (error) {
 
-          toastr.error("Sorry, only audio files with .aac or .m4a extension supported");
-          return;
-        }
-
-        // Allow 100 KB or less only
-
-        console.log("Resolving URI: " + uri);
-
-        window.resolveLocalFileSystemURL(uri, function(fileEntry) {
-
-          fileEntry.file(function (file) {
-
-            if (file.size > 500000) {
-
-              toastr.error("Sorry, file size exceeds 100Kb. Please choose another file.");
-              return;
-
-            } else {
-
-              // Attach the file and display it
-
-              page_thankyou.attachFile(uri, function (movedUri) {
-                page_thankyou.showAttachment(movedUri);
-              });
-
-            }
-          }, function (error) {
-
-            // Could not resolve the file. The filename may contains certain chars like
-            // # (hash) which resolveLocalFileSystemURL does not handle well. Nothing we
-            // can do. :(
-
-            toastr.error("Unable to read file. Please make sure filename does not contain any special characters.");
-            appFile.fail(error);
-            return;
-
-          });
-        });
-      }, function () {
         toastr.error("Error choosing file: " + error);
+
       });
+
     });
 
     // Edit current memory (the most recently added one)
@@ -219,6 +184,61 @@ var page_thankyou = {
   },
 
   //
+  // Attach an audio file to the last inserted memory
+  //
+
+  attachAudio: function (uri) {
+
+    console.log("Audio URI: " + uri);
+
+    // Is audio format supported?
+
+    if (util.isAudioFile(uri) === false) {
+
+      toastr.error("Sorry, only audio files with .aac or .m4a extension supported");
+      return;
+    }
+
+    // Do not allow if size is too big
+
+    window.resolveLocalFileSystemURL(uri, function(fileEntry) {
+
+      fileEntry.file(function (file) {
+
+        if (file.size > 500000) {
+
+          toastr.error("Sorry, file size exceeds 500Kb. Please choose another file.");
+          return;
+
+        } else {
+
+          // Attach the file and display it
+
+          console.log("Attaching file...");
+
+          page_thankyou.attachFile(uri, function (movedUri) {
+
+            console.log("Attached! Now displaying file...");
+            
+            page_thankyou.showAttachment(movedUri);
+          });
+
+        }
+      }, function (error) {
+
+        // Could not resolve the file. The filename may contains certain chars like
+        // # (hash) which resolveLocalFileSystemURL does not handle well. Nothing we
+        // can do. :(
+
+        toastr.error("Unable to read file. Please make sure filename does not contain any special characters.");
+        appFile.fail(error);
+        return;
+
+      });
+    });
+  },
+
+  //
   // Given a file uri, attach it to the database and send to server
   //
 
@@ -268,7 +288,6 @@ var page_thankyou = {
 
             console.log("Inside onloadend");
             var dataURL = evt.target.result;
-            console.log("Binary image data is: " + dataURL);
 
             // Attach and send!
 
